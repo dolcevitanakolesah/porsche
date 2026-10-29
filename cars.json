@@ -15,24 +15,12 @@
     "engine": "3.3L turbocharged flat-six",
     "location": "Northern Italy",
     "status": "Available",
-    "cover": "assets/930-turbo-example/exterior-front-3q.jpg",
-    "cover_alt": "Guards Red Porsche 911 Turbo 3.3, front three-quarter view",
+    "cover": "assets/930-turbo-example/exterior.jpg",
+    "cover_alt": "Sample visual of a Porsche 911 generation 930",
     "gallery": [
       {
-        "src": "assets/930-turbo-example/exterior-front-3q.jpg",
-        "alt": "Front three-quarter exterior"
-      },
-      {
-        "src": "assets/930-turbo-example/exterior-rear-3q.jpg",
-        "alt": "Rear three-quarter exterior"
-      },
-      {
-        "src": "assets/930-turbo-example/interior-dashboard.jpg",
-        "alt": "Dashboard and steering wheel"
-      },
-      {
-        "src": "assets/930-turbo-example/interior-seats.jpg",
-        "alt": "Front seats and cabin"
+        "src": "assets/930-turbo-example/exterior.jpg",
+        "alt": "Porsche 911 930 — sample exterior image"
       }
     ],
     "description": "A classic wide-bodied 911 Turbo, presented as a considered example of the late 930 era. Replace this sample copy with a verified description of this specific car, including specification, condition, originality and any notable factory options.",
@@ -81,24 +69,12 @@
     "engine": "3.6L naturally aspirated flat-six",
     "location": "Switzerland",
     "status": "Available",
-    "cover": "assets/964-carrera-example/exterior-front-3q.jpg",
-    "cover_alt": "Silver Porsche 911 Carrera 2 Coupé",
+    "cover": "assets/964-carrera-example/exterior.jpg",
+    "cover_alt": "Sample visual of a Porsche 911 generation 964",
     "gallery": [
       {
-        "src": "assets/964-carrera-example/exterior-front-3q.jpg",
-        "alt": "Front three-quarter exterior"
-      },
-      {
-        "src": "assets/964-carrera-example/exterior-rear-3q.jpg",
-        "alt": "Rear three-quarter exterior"
-      },
-      {
-        "src": "assets/964-carrera-example/interior-dashboard.jpg",
-        "alt": "Dashboard"
-      },
-      {
-        "src": "assets/964-carrera-example/interior-seats.jpg",
-        "alt": "Interior seats"
+        "src": "assets/964-carrera-example/exterior.jpg",
+        "alt": "Porsche 911 964 — sample exterior image"
       }
     ],
     "description": "Sample description for a 964 Carrera 2 Coupé. Add confirmed details on specification, paintwork, mechanical condition and originality.",
@@ -133,24 +109,12 @@
     "engine": "3.6L air-cooled flat-six",
     "location": "Germany",
     "status": "Available",
-    "cover": "assets/993-carrera-example/exterior-front-3q.jpg",
-    "cover_alt": "Blue Porsche 911 Carrera Coupé",
+    "cover": "assets/993-carrera-example/exterior.jpg",
+    "cover_alt": "Sample visual of a Porsche 911 generation 993",
     "gallery": [
       {
-        "src": "assets/993-carrera-example/exterior-front-3q.jpg",
-        "alt": "Front three-quarter exterior"
-      },
-      {
-        "src": "assets/993-carrera-example/exterior-rear-3q.jpg",
-        "alt": "Rear three-quarter exterior"
-      },
-      {
-        "src": "assets/993-carrera-example/interior-dashboard.jpg",
-        "alt": "Dashboard"
-      },
-      {
-        "src": "assets/993-carrera-example/interior-seats.jpg",
-        "alt": "Interior"
+        "src": "assets/993-carrera-example/exterior.jpg",
+        "alt": "Porsche 911 993 — sample exterior image"
       }
     ],
     "description": "Sample listing for the final air-cooled generation. Replace with this car's verified specification and condition report.",
@@ -185,24 +149,12 @@
     "engine": "3.6L naturally aspirated flat-six",
     "location": "France",
     "status": "Available",
-    "cover": "assets/996-gt3-example/exterior-front-3q.jpg",
-    "cover_alt": "Silver Porsche 911 GT3",
+    "cover": "assets/996-gt3-example/exterior.jpg",
+    "cover_alt": "Sample visual of a Porsche 911 generation 996",
     "gallery": [
       {
-        "src": "assets/996-gt3-example/exterior-front-3q.jpg",
-        "alt": "Front three-quarter exterior"
-      },
-      {
-        "src": "assets/996-gt3-example/exterior-rear-3q.jpg",
-        "alt": "Rear three-quarter exterior"
-      },
-      {
-        "src": "assets/996-gt3-example/interior-dashboard.jpg",
-        "alt": "Dashboard"
-      },
-      {
-        "src": "assets/996-gt3-example/interior-seats.jpg",
-        "alt": "Interior"
+        "src": "assets/996-gt3-example/exterior.jpg",
+        "alt": "Porsche 911 996 — sample exterior image"
       }
     ],
     "description": "Sample listing for a 996 GT3. Add confirmed model-year details, options, engine and gearbox information, and a specialist inspection summary.",
@@ -237,24 +189,12 @@
     "engine": "3.8L naturally aspirated flat-six",
     "location": "Belgium",
     "status": "Available",
-    "cover": "assets/997-carrera-example/exterior-front-3q.jpg",
-    "cover_alt": "White Porsche 911 Carrera S Coupé",
+    "cover": "assets/997-carrera-example/exterior.jpg",
+    "cover_alt": "Sample visual of a Porsche 911 generation 997",
     "gallery": [
       {
-        "src": "assets/997-carrera-example/exterior-front-3q.jpg",
-        "alt": "Front three-quarter exterior"
-      },
-      {
-        "src": "assets/997-carrera-example/exterior-rear-3q.jpg",
-        "alt": "Rear three-quarter exterior"
-      },
-      {
-        "src": "assets/997-carrera-example/interior-dashboard.jpg",
-        "alt": "Dashboard"
-      },
-      {
-        "src": "assets/997-carrera-example/interior-seats.jpg",
-        "alt": "Interior"
+        "src": "assets/997-carrera-example/exterior.jpg",
+        "alt": "Porsche 911 997 — sample exterior image"
       }
     ],
     "description": "Sample listing for a 997 Carrera S. Replace with accurate details, including the relevant engine generation and any known maintenance campaigns.",
@@ -289,24 +229,12 @@
     "engine": "3.8L naturally aspirated flat-six",
     "location": "Italy",
     "status": "Available",
-    "cover": "assets/991-targa-example/exterior-front-3q.jpg",
-    "cover_alt": "Grey Porsche 911 Targa 4 GTS",
+    "cover": "assets/991-targa-example/exterior.jpg",
+    "cover_alt": "Sample visual of a Porsche 911 generation 991",
     "gallery": [
       {
-        "src": "assets/991-targa-example/exterior-front-3q.jpg",
-        "alt": "Front three-quarter exterior"
-      },
-      {
-        "src": "assets/991-targa-example/exterior-rear-3q.jpg",
-        "alt": "Rear three-quarter exterior"
-      },
-      {
-        "src": "assets/991-targa-example/interior-dashboard.jpg",
-        "alt": "Dashboard"
-      },
-      {
-        "src": "assets/991-targa-example/interior-seats.jpg",
-        "alt": "Interior"
+        "src": "assets/991-targa-example/exterior.jpg",
+        "alt": "Porsche 911 991 — sample exterior image"
       }
     ],
     "description": "Sample listing for a 991 Targa 4 GTS. Confirm the exact model specification, factory options, service history and current condition before publication.",
@@ -341,24 +269,12 @@
     "engine": "3.0L twin-turbocharged flat-six",
     "location": "Netherlands",
     "status": "Available",
-    "cover": "assets/992-carrera-example/exterior-front-3q.jpg",
-    "cover_alt": "Modern Porsche 911 Carrera GTS",
+    "cover": "assets/992-carrera-example/exterior.jpg",
+    "cover_alt": "Sample visual of a Porsche 911 generation 992",
     "gallery": [
       {
-        "src": "assets/992-carrera-example/exterior-front-3q.jpg",
-        "alt": "Front three-quarter exterior"
-      },
-      {
-        "src": "assets/992-carrera-example/exterior-rear-3q.jpg",
-        "alt": "Rear three-quarter exterior"
-      },
-      {
-        "src": "assets/992-carrera-example/interior-dashboard.jpg",
-        "alt": "Dashboard"
-      },
-      {
-        "src": "assets/992-carrera-example/interior-seats.jpg",
-        "alt": "Interior"
+        "src": "assets/992-carrera-example/exterior.jpg",
+        "alt": "Porsche 911 992 — sample exterior image"
       }
     ],
     "description": "Sample listing for a 992 Carrera GTS. Replace with the verified specification, warranty status, option list and inspection notes for the actual vehicle.",
