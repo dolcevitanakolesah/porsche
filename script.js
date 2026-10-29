@@ -14,70 +14,19 @@
     if (typeof car.price === "number") return new Intl.NumberFormat("en-US", { style: "currency", currency: car.currency || "EUR", maximumFractionDigits: 0 }).format(car.price);
     return "Price on request";
   };
-  const formatMileage = car => car.mileage_display || (car.mileage_km != null ? `${Number(car.mileage_km).toLocaleString("en-US")} km` : "Mileage on request");
+  const formatMileage = car => car.mileage_display || (car.mileage_km != null ? `${Number(car.mileage_km).toLocaleString("en-US")} km` : "Not specified");
+  const formatDescription = value => Array.isArray(value) ? value.filter(Boolean).map(escapeHTML).join("<br><br>") : escapeHTML(value || "");
   const carHref = car => `./index.html?car=${encodeURIComponent(car.id)}`;
   const imagePath = path => path ? `./${String(path).replace(/^\.?\//, "")}` : "";
   const safeArray = value => Array.isArray(value) ? value : [];
-
-  // GitHub Pages cannot list a directory, so probe supported extensions in order.
-  // Keep the filename and capitalization convention intact; only the extension varies.
-  async function resolveImagePath(path) {
-    if (!path) return "";
-    const clean = String(path).replace(/^\.?\//, "");
-    const base = clean.replace(/\.(?:jpe?g|webp)$/i, "");
-    for (const extension of ["jpg", "webp"]) {
-      const candidate = `${base}.${extension}`;
-      const exists = await new Promise(resolve => {
-        const image = new Image();
-        image.onload = () => resolve(true);
-        image.onerror = () => resolve(false);
-        image.src = imagePath(candidate);
-      });
-      if (exists) return candidate;
-    }
-    return "";
-  }
 
   async function loadCars() {
     try {
       const response = await fetch(DATA_URL);
       if (!response.ok) throw new Error(`Could not load cars.json (${response.status})`);
-      const entries = await response.json();
-      if (!Array.isArray(entries)) throw new Error("cars.json must contain an array of cars.");
-      // Public data stays in the user's simple five-field format.
-      // Adapt it internally for the existing gallery UI.
-      return await Promise.all(entries.map(async (entry, index) => {
-        const folder = String(entry.folder || "").replace(/^\/+|\/+$/g, "");
-        const prefix = String(entry.prefix || folder).replace(/^\/+|\/+$/g, "");
-        // Main image is used for the collection thumbnail; either JPG or WebP is accepted.
-        const image = folder && prefix ? await resolveImagePath(`assets/${folder}/${prefix}-Main.jpg`) : "";
-        const title = entry.title || `Porsche 911 ${index + 1}`;
-        const seriesMatch = title.match(/\b(930|964|993|996|997|991|992)\b/);
-        return {
-          id: `car-${index + 1}`,
-          series: seriesMatch ? seriesMatch[1] : "911",
-          title,
-          year: "",
-          cover: image,
-          cover_alt: entry.imageAlt || title,
-          folder,
-          prefix,
-          gallery: image ? [{ src: image, alt: entry.imageAlt || title }] : [],
-          description: Array.isArray(entry.description) ? entry.description.filter(line => String(line).trim()).join("\n\n") : String(entry.description || ""),
-          status: "Collection",
-          price_display: "",
-          mileage_display: "",
-          transmission: "",
-          color: "",
-          interior_color: "",
-          engine: "",
-          location: "",
-          history: "",
-          previous_owners: [],
-          maintenance: [],
-          videos: []
-        };
-      }));
+      const cars = await response.json();
+      if (!Array.isArray(cars)) throw new Error("cars.json must contain an array of cars.");
+      return cars;
     } catch (error) {
       console.error(error);
       const grid = $("#car-grid");
@@ -89,7 +38,7 @@
   function renderCard(car) {
     const img = imagePath(car.cover || safeArray(car.gallery)[0]?.src);
     const title = car.title || `Porsche 911 ${car.series || ""}`;
-    const year = car.year || "Year on request";
+    const year = car.year || "Year not specified";
     const alt = car.cover_alt || `${title} exterior`;
     return `<article class="car-card">
       <a class="car-card-link" href="${escapeHTML(carHref(car))}" aria-label="View ${escapeHTML(title)}">
@@ -101,8 +50,8 @@
         <div class="car-card-meta">
           <div class="card-overline"><span>${escapeHTML(year)}</span><span class="generation">${escapeHTML(car.series || "911")}</span></div>
           <h3>${escapeHTML(title)}</h3>
-          <div class="card-specs"><span>${escapeHTML(car.series === "911" ? "Porsche 911" : `Generation ${car.series}`)}</span></div>
-          <div class="card-price-row"><span class="card-price">911 Archive</span><span class="card-detail-link">View car ↗</span></div>
+          <div class="card-specs"><span>${escapeHTML(formatMileage(car))}</span><span class="dot"></span><span>${escapeHTML(car.transmission || "Not specified")}</span></div>
+          <div class="card-price-row"><span class="card-price">${escapeHTML(formatPrice(car))}</span><span class="card-detail-link">View car ↗</span></div>
         </div>
       </a>
     </article>`;
@@ -140,38 +89,23 @@
     render();
   }
 
-  async function discoverGalleryPhotos(car) {
-    // GitHub Pages cannot list a directory, so check numbered files in order.
-    // The -Main image is reserved for the collection thumbnail and is not in this gallery.
-    const photos = [];
-    const prefix = car.prefix || car.folder;
-    for (let number = 1; number <= 99; number++) {
-      const sequence = String(number).padStart(2, "0");
-      const src = await resolveImagePath(`assets/${car.folder}/${prefix}-${sequence}.jpg`);
-      if (!src) break;
-      photos.push({ src, alt: `${car.title} — photo ${sequence}` });
-    }
-    return photos;
-  }
-
   function detailTemplate(car) {
-    const gallery = safeArray(car.gallery).filter(photo => !String(photo.src || "").endsWith("-Main.jpg"));
+    const gallery = safeArray(car.gallery);
     const title = car.title || `Porsche 911 ${car.series || ""}`;
     const facts = [
-      ["Model year", car.year || "On request"], ["Generation", car.series || "911"],
-      ["Mileage", formatMileage(car)], ["Transmission", car.transmission || "On request"],
-      ["Exterior", car.color || "On request"], ["Interior", car.interior_color || "On request"],
-      ["Engine", car.engine || "On request"], ["Location", car.location || "On request"]
+      ["Model year", car.year || "Not specified"], ["Generation", car.series || "911"],
+      ["Mileage", formatMileage(car)], ["Displacement", car.displacement || "Not specified"],
+      ["Power", car.power || "Not specified"], ["Transmission", car.transmission || "Not specified"]
     ];
-    const mainImage = gallery[0]?.src;
+    const mainImage = gallery[0]?.src || car.cover;
     const galleryMarkup = mainImage ? `
       <div class="gallery-layout">
         <div class="gallery-main"><img id="gallery-main-image" src="${escapeHTML(imagePath(mainImage))}" alt="${escapeHTML(gallery[0]?.alt || title)}"><span class="gallery-count" id="gallery-count">01 / ${String(Math.max(gallery.length,1)).padStart(2,"0")}</span></div>
         <div class="gallery-thumbs">${gallery.slice(0,4).map((photo,i)=>`<button class="gallery-thumb ${i===0?"active":""}" data-index="${i}" aria-label="Show photo ${i+1}"><img src="${escapeHTML(imagePath(photo.src))}" alt="${escapeHTML(photo.alt || `${title} photo ${i+1}`)}" loading="${i===0?"eager":"lazy"}"></button>`).join("")}</div>
-      </div>` : `<div class="gallery-empty">Add numbered photos to <code>assets/${escapeHTML(car.folder)}/</code> using <code>${escapeHTML(car.prefix)}-01.jpg</code> or <code>${escapeHTML(car.prefix)}-01.webp</code>, and so on.</div>`;
+      </div>` : `<div class="gallery-empty">Add photos to this car's gallery in cars.json</div>`;
     const maintenance = safeArray(car.maintenance);
     const owners = safeArray(car.previous_owners);
-    const history = car.history || "Provenance and ownership history to be confirmed with the vehicle file.";
+    const history = car.history || "No separate history details supplied.";
     const videos = safeArray(car.videos);
     return `<div class="detail-page">
       <div class="detail-topbar"><a class="wordmark" href="./index.html"><span class="wordmark-mark">911</span><span class="wordmark-copy">ARCHIVE<span>CURATED PORSCHE</span></span></a><a class="back-link" href="./index.html"><span>←</span> Back to collection</a></div>
@@ -179,15 +113,15 @@
         <p class="detail-kicker">${escapeHTML(car.year || "")} &nbsp; / &nbsp; Porsche 911 ${escapeHTML(car.series || "")}</p>
         <div class="detail-title-row"><h1>${escapeHTML(title)}<span>.</span></h1><div class="detail-price">${escapeHTML(formatPrice(car))}<small>${escapeHTML(car.status || "Available for enquiry")}</small></div></div>
         ${galleryMarkup}
-        <section class="detail-overview"><div><p class="eyebrow dark-eyebrow">The car</p><h2>A closer look.</h2><div class="detail-description">${escapeHTML(car.description || "A full description for this example will be added shortly.")}</div></div>
+        <section class="detail-overview"><div><p class="eyebrow dark-eyebrow">The car</p><h2>A closer look.</h2><div class="detail-description">${formatDescription(car.description || "A full description for this example will be added shortly.")}</div></div>
           <div class="detail-facts">${facts.map(([label,value])=>`<div class="fact"><span>${escapeHTML(label)}</span><strong>${escapeHTML(value)}</strong></div>`).join("")}</div>
         </section>
         <section class="detail-section"><p class="eyebrow dark-eyebrow">The story</p><h2>History & provenance</h2><div class="history-grid">
           <div class="history-block"><h3>Vehicle history</h3><p>${escapeHTML(history)}</p>${car.vin ? `<p><strong>VIN / chassis:</strong> ${escapeHTML(car.vin)}</p>` : ""}${car.service_book ? `<p><strong>Documentation:</strong> ${escapeHTML(car.service_book)}</p>` : ""}</div>
-          <div class="history-block"><h3>Previous ownership</h3>${owners.length ? `<ul>${owners.map(owner=>`<li>${escapeHTML(typeof owner === "string" ? owner : [owner.period,owner.detail].filter(Boolean).join(" — "))}</li>`).join("")}</ul>` : "<p>Previous owner details available on request, subject to privacy and supporting documentation.</p>"}</div>
+          <div class="history-block"><h3>Previous ownership</h3>${owners.length ? `<ul>${owners.map(owner=>`<li>${escapeHTML(typeof owner === "string" ? owner : [owner.period,owner.detail].filter(Boolean).join(" — "))}</li>`).join("")}</ul>` : "<p>No previous-owner details supplied.</p>"}</div>
         </div></section>
         <section class="detail-section"><p class="eyebrow dark-eyebrow">Care & maintenance</p><h2>Work performed.</h2><p class="section-lead">Maintenance entries should be supported by invoices or service records where available.</p>
-          ${maintenance.length ? `<div class="history-grid">${maintenance.map(item=>`<div class="history-block"><h3>${escapeHTML(item.date || "Service record")}</h3><p>${escapeHTML(item.description || item)}</p>${item.provider ? `<p><strong>Provider:</strong> ${escapeHTML(item.provider)}</p>` : ""}</div>`).join("")}</div>` : `<p class="detail-description">Maintenance records will be listed here. Please enquire for the available service file.</p>`}
+          ${maintenance.length ? `<div class="history-grid">${maintenance.map(item=>`<div class="history-block"><h3>${escapeHTML(item.date || "Service record")}</h3><p>${escapeHTML(item.description || item)}</p>${item.provider ? `<p><strong>Provider:</strong> ${escapeHTML(item.provider)}</p>` : ""}</div>`).join("")}</div>` : `<p class="detail-description">No maintenance records supplied.</p>`}
         </section>
         ${videos.length ? `<section class="detail-section"><p class="eyebrow dark-eyebrow">Moving images</p><h2>In motion.</h2><div class="video-grid">${videos.map(video=>`<video controls preload="metadata" poster="${escapeHTML(imagePath(video.poster || ""))}"><source src="${escapeHTML(imagePath(video.src || video))}" type="${escapeHTML(video.type || "video/mp4")}">Your browser does not support video playback.</video>`).join("")}</div></section>` : ""}
         <section class="detail-cta"><div><h2>Interested in this 911?</h2><p>Request the full vehicle file, additional photographs or a delivery quote.</p></div><a class="button button-dark" href="mailto:${encodeURIComponent(car.contact_email || "hello@example.com")}?subject=${encodeURIComponent("Enquiry: " + title)}">Enquire about this car ↗</a></section>
@@ -202,14 +136,7 @@
       root.innerHTML = `<div class="detail-not-found"><p class="eyebrow dark-eyebrow">404 / Car not found</p><h1>This 911 isn't in the collection.</h1><p>It may have been removed or the link may be incorrect.</p><a class="button button-dark" href="./index.html">Return to collection</a></div>`;
       return;
     }
-    discoverGalleryPhotos(car).then(photos => {
-      car.gallery = photos;
-      root.innerHTML = detailTemplate(car);
-      bindGallery(car);
-    });
-  }
-
-  function bindGallery(car) {
+    root.innerHTML = detailTemplate(car);
     const gallery = safeArray(car.gallery);
     $$(".gallery-thumb").forEach(button => button.addEventListener("click", () => {
       const index = Number(button.dataset.index);
