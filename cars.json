@@ -5,9 +5,9 @@
     "imageAlt": "Porsche 964",
     "title": "1991 Porsche 964 Cabriolet Tiptronic",
     "year": "1991",
-    "mileage": "",
-    "displacement": "3.6-litre",
-    "power": "",
+    "mileage": "255,000 Km",
+    "displacement": "3.6 litre",
+    "power": "247 HP",
     "transmission": "4-speed Tiptronic automatic",
     "description": [
       "A timeless classic finished in iconic Guard Red with a grey interior. California-imported and owned by just two keepers since new, this 964 pairs the legendary 3.6-litre flat-six with a four-speed Tiptronic automatic transmission.",
@@ -15,6 +15,7 @@
       "Equipped with 16-inch Porsche Design wheels, air conditioning, cruise control and electric seats, it comes with its history file, Porsche booklets, owner’s manual, service book, original tool kit and spare keys."
     ]
   },
+  
   {
     "folder": "993-Ravenna",
     "prefix": "993-Ravenna",
@@ -22,8 +23,8 @@
     "title": "На исходе эпохи: 1994 Porsche 993",
     "year": "1994",
     "mileage": "142,000 km",
-    "displacement": "",
-    "power": "272 hp",
+    "displacement": "3.6 litre",
+    "power": "272 HP",
     "transmission": "6-speed manual",
     "description": [
       "Есть автомобили, которые знаменуют собой конец эпохи. Этот Porsche 911 (993) Carrera 2 1994 года - именно такой: ранний экземпляр последнего поколения с воздушным охлаждением, с 272-сильным оппозитным 6ти-цилиндровым двигателем, задним приводом и 6ти-ступенчатой механикой.",
@@ -31,6 +32,7 @@
       "Кузов в оригинальном синем металлике, чёрный салон, заводская комплектация. А также документированная история обслуживания, сервисная книжка и счета. На одометре - 142 000 км. Отличный шанс получить «аналоговый» 911 во всей своей красе. Количество таких экземляров, увы, не растёт."
     ]
   },
+  
   {
     "folder": "964-Rochelle",
     "prefix": "964-Rochelle",
@@ -38,15 +40,16 @@
     "title": "Всегда в моде: 1990 Porsche 964",
     "year": "1990",
     "mileage": "96,000 km",
-    "displacement": "",
-    "power": "",
-    "transmission": "Tiptronic",
+    "displacement": "3.6 litre",
+    "power": "247 HP",
+    "transmission": "4-speed Tiptronic automatic",
     "description": [
       "Белый верх, бежевый низ - беспроигрышная элегантная классика! Пробег 96 000 подтверждённых километров, чистая биография без ДТП и бойкий Tiptronic. Приехала во Францию в 2010, и с тех пор хранит верность одному-единственному владельцу.",
       "    ",
       "Её холили и лелеяли: нет ржавчины, дождя не видела. С водонепроницаемой крышей готова и к солнечным вылазкам, и к круглогодичным приключениям."
     ]
   },
+  
   {
     "folder": "993-Dueville",
     "prefix": "993-Dueville",
@@ -54,9 +57,9 @@
     "title": "Миля за милей: 1997 Porsche 993",
     "year": "1997",
     "mileage": "154,000 km",
-    "displacement": "",
-    "power": "",
-    "transmission": "",
+    "displacement": "3.6 litre",
+    "power": "272 HP",
+    "transmission": "6-speed manual",
     "description": [
       "Серебристый металлик Polar, всего два владельца и почти 30 лет тщательно задокументированной истории. Этот Porsche 911 (993) 1997 года с самого начала обслуживался у специалистов по Porsche в Падуе и Виченце - сервисная история отслеживает каждый этап его биографии.",
       "    ",
