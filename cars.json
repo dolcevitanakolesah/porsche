@@ -10,6 +10,7 @@
       "Equipped with 16-inch Porsche Design wheels, air conditioning, cruise control and electric seats, it comes with its history file, Porsche booklets, owner’s manual, service book, original tool kit and spare keys."
     ]
   },
+
   
   {
     "folder": "993-Ravenna",
@@ -22,6 +23,8 @@
       "Кузов в оригинальном синем металлике, чёрный салон, заводская комплектация. А также документированная история обслуживания, сервисная книжка и счета. На одометре - 142 000 км. Отличный шанс получить «аналоговый» 911 во всей своей красе. Количество таких экземляров, увы, не растёт."
     ]
   },
+
+  
   {
     "folder": "993-Dueville",
     "prefix": "993-Dueville",
@@ -33,6 +36,8 @@
       "Зарегистрирован в ASI, на одометре 154 000 км. Идеально сохранившийся салон и мотор, который работает как часы. На кузове пара мелких парковочных царапин, честно запечатлённых крупным планом. Аутентичный 993, которому нечего скрывать, с историей, которую стоит открыть для себя."
     ]
   },
+
+  
   {
     "folder": "996-gt3-example",
     "prefix": "996-gt3-example",
@@ -53,6 +58,8 @@
       "Sample description — replace this text with the details of your specific car."
     ]
   },
+
+  
   {
     "folder": "991-targa-example",
     "prefix": "991-targa-example",
@@ -63,6 +70,8 @@
       "Sample description — replace this text with the details of your specific car."
     ]
   },
+
+  
   {
     "folder": "992-carrera-example",
     "prefix": "992-carrera-example",
