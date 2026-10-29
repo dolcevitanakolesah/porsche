@@ -52,13 +52,14 @@
 
   
   {
-    "folder": "996-gt3-example",
-    "prefix": "996-gt3-example",
-    "imageAlt": "Porsche 911 generation 996 — sample image",
-    "title": "2004 Porsche 911 GT3",
+    "folder": "993-Forli",
+    "prefix": "993-Forli",
+    "imageAlt": "Porsche 993",
+    "title": "Вечная классика: 1995 Porsche 993",
     "description": [
-      "A focused, driver-oriented 911 from the water-cooled 996 era.",
-      "Sample description — replace this text with the details of your specific car."
+      "A stunning Porsche 993 Carrera Coupé in excellent condition, finished in elegant black with a black leather interior. First registered in June 1995, it features a 3.6-litre six-cylinder engine producing 272 hp, paired with a 6-speed manual gearbox and rear-wheel drive.",
+      "    ",
+      "With 135,000 km, this iconic air-cooled 911 combines timeless design, pure driving pleasure, and outstanding collectible appeal."
     ]
   },
   {
