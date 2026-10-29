@@ -23,9 +23,42 @@
     try {
       const response = await fetch(DATA_URL);
       if (!response.ok) throw new Error(`Could not load cars.json (${response.status})`);
-      const cars = await response.json();
-      if (!Array.isArray(cars)) throw new Error("cars.json must contain an array of cars.");
-      return cars;
+      const entries = await response.json();
+      if (!Array.isArray(entries)) throw new Error("cars.json must contain an array of cars.");
+      // Public data stays in the user's simple five-field format.
+      // Adapt it internally for the existing gallery UI.
+      return entries.map((entry, index) => {
+        const folder = String(entry.folder || "").replace(/^\/+|\/+$/g, "");
+        const prefix = String(entry.prefix || folder).replace(/^\/+|\/+$/g, "");
+        // Main image is used for the collection thumbnail; numbered images power the detail gallery.
+        const image = folder && prefix ? `assets/${folder}/${prefix}-Main.jpg` : "";
+        const title = entry.title || `Porsche 911 ${index + 1}`;
+        const seriesMatch = title.match(/\b(930|964|993|996|997|991|992)\b/);
+        return {
+          id: `car-${index + 1}`,
+          series: seriesMatch ? seriesMatch[1] : "911",
+          title,
+          year: "",
+          cover: image,
+          cover_alt: entry.imageAlt || title,
+          folder,
+          prefix,
+          gallery: image ? [{ src: image, alt: entry.imageAlt || title }] : [],
+          description: Array.isArray(entry.description) ? entry.description.filter(line => String(line).trim()).join("\n\n") : String(entry.description || ""),
+          status: "Collection",
+          price_display: "",
+          mileage_display: "",
+          transmission: "",
+          color: "",
+          interior_color: "",
+          engine: "",
+          location: "",
+          history: "",
+          previous_owners: [],
+          maintenance: [],
+          videos: []
+        };
+      });
     } catch (error) {
       console.error(error);
       const grid = $("#car-grid");
@@ -49,8 +82,8 @@
         <div class="car-card-meta">
           <div class="card-overline"><span>${escapeHTML(year)}</span><span class="generation">${escapeHTML(car.series || "911")}</span></div>
           <h3>${escapeHTML(title)}</h3>
-          <div class="card-specs"><span>${escapeHTML(formatMileage(car))}</span><span class="dot"></span><span>${escapeHTML(car.transmission || "Details on request")}</span></div>
-          <div class="card-price-row"><span class="card-price">${escapeHTML(formatPrice(car))}</span><span class="card-detail-link">View car ↗</span></div>
+          <div class="card-specs"><span>${escapeHTML(car.series === "911" ? "Porsche 911" : `Generation ${car.series}`)}</span></div>
+          <div class="card-price-row"><span class="card-price">911 Archive</span><span class="card-detail-link">View car ↗</span></div>
         </div>
       </a>
     </article>`;
@@ -88,8 +121,28 @@
     render();
   }
 
+  async function discoverGalleryPhotos(car) {
+    // GitHub Pages cannot list a directory, so check numbered files in order.
+    // The -Main image is reserved for the collection thumbnail and is not in this gallery.
+    const photos = [];
+    const prefix = car.prefix || car.folder;
+    for (let number = 1; number <= 99; number++) {
+      const sequence = String(number).padStart(2, "0");
+      const src = `assets/${car.folder}/${prefix}-${sequence}.jpg`;
+      const exists = await new Promise(resolve => {
+        const image = new Image();
+        image.onload = () => resolve(true);
+        image.onerror = () => resolve(false);
+        image.src = imagePath(src);
+      });
+      if (!exists) break;
+      photos.push({ src, alt: `${car.title} — photo ${sequence}` });
+    }
+    return photos;
+  }
+
   function detailTemplate(car) {
-    const gallery = safeArray(car.gallery);
+    const gallery = safeArray(car.gallery).filter(photo => !String(photo.src || "").endsWith("-Main.jpg"));
     const title = car.title || `Porsche 911 ${car.series || ""}`;
     const facts = [
       ["Model year", car.year || "On request"], ["Generation", car.series || "911"],
@@ -97,12 +150,12 @@
       ["Exterior", car.color || "On request"], ["Interior", car.interior_color || "On request"],
       ["Engine", car.engine || "On request"], ["Location", car.location || "On request"]
     ];
-    const mainImage = gallery[0]?.src || car.cover;
+    const mainImage = gallery[0]?.src;
     const galleryMarkup = mainImage ? `
       <div class="gallery-layout">
         <div class="gallery-main"><img id="gallery-main-image" src="${escapeHTML(imagePath(mainImage))}" alt="${escapeHTML(gallery[0]?.alt || title)}"><span class="gallery-count" id="gallery-count">01 / ${String(Math.max(gallery.length,1)).padStart(2,"0")}</span></div>
         <div class="gallery-thumbs">${gallery.slice(0,4).map((photo,i)=>`<button class="gallery-thumb ${i===0?"active":""}" data-index="${i}" aria-label="Show photo ${i+1}"><img src="${escapeHTML(imagePath(photo.src))}" alt="${escapeHTML(photo.alt || `${title} photo ${i+1}`)}" loading="${i===0?"eager":"lazy"}"></button>`).join("")}</div>
-      </div>` : `<div class="gallery-empty">Add photos to this car's gallery in cars.json</div>`;
+      </div>` : `<div class="gallery-empty">Add numbered photos to <code>assets/${escapeHTML(car.folder)}/</code> using <code>${escapeHTML(car.prefix)}-01.jpg</code>, <code>${escapeHTML(car.prefix)}-02.jpg</code>, and so on.</div>`;
     const maintenance = safeArray(car.maintenance);
     const owners = safeArray(car.previous_owners);
     const history = car.history || "Provenance and ownership history to be confirmed with the vehicle file.";
@@ -136,7 +189,14 @@
       root.innerHTML = `<div class="detail-not-found"><p class="eyebrow dark-eyebrow">404 / Car not found</p><h1>This 911 isn't in the collection.</h1><p>It may have been removed or the link may be incorrect.</p><a class="button button-dark" href="./index.html">Return to collection</a></div>`;
       return;
     }
-    root.innerHTML = detailTemplate(car);
+    discoverGalleryPhotos(car).then(photos => {
+      car.gallery = photos;
+      root.innerHTML = detailTemplate(car);
+      bindGallery(car);
+    });
+  }
+
+  function bindGallery(car) {
     const gallery = safeArray(car.gallery);
     $$(".gallery-thumb").forEach(button => button.addEventListener("click", () => {
       const index = Number(button.dataset.index);
