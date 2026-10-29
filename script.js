@@ -63,17 +63,29 @@
     if (!folder || !prefix) return [];
     const dir = `assets/${folder}/${prefix}`;
     const altBase = car.imageAlt || car.title || "Porsche 911";
-    const photos = [];
-    // -Main is reserved for the collection-card thumbnail. The per-car gallery
-    // must contain numbered photos only: Prefix-01, Prefix-02, and so on.
-    // Numbered photos are expected to be sequential; stop at the first missing number.
+    const items = [];
+    // -Main is reserved for the collection-card thumbnail. The detail gallery
+    // contains numbered photos first, followed by PREFIX-video-01.mp4, etc.
     for (let number = 1; number <= 30; number++) {
       const label = String(number).padStart(2, "0");
       const photo = await probeImage(`${dir}-${label}`, `${altBase} — photo ${label}`);
       if (!photo) break;
-      photos.push(photo);
+      items.push({ ...photo, type: "photo" });
     }
-    return photos;
+    // Probe videos only after photos so they are appended at the end. HEAD avoids
+    // downloading the video just to discover whether the file exists.
+    for (let number = 1; number <= 20; number++) {
+      const label = String(number).padStart(2, "0");
+      const src = `assets/${folder}/${prefix}-video-${label}.mp4`;
+      let exists = false;
+      try {
+        const response = await fetch(src, { method: "HEAD" });
+        exists = response.ok;
+      } catch (_) { exists = false; }
+      if (!exists) break;
+      items.push({ type: "video", src, stem: src, alt: `${altBase} — video ${label}` });
+    }
+    return items;
   }
 
 
@@ -157,7 +169,6 @@
       <a class="car-card-link" href="${escapeHTML(carHref(car))}" aria-label="View ${escapeHTML(title)}">
         <div class="car-image-wrap">
           ${img ? `<img class="car-image" data-image-stem="${escapeHTML(img.replace(/\.(?:jpg|jpeg|webp)$/i, ""))}" src="${escapeHTML(img)}" alt="${escapeHTML(alt)}" loading="lazy"><div class="car-image-fallback" hidden>911</div>` : `<div class="car-image-fallback">911</div>`}
-          <span class="card-status">${escapeHTML(car.status || "Available")}</span>
           <span class="card-arrow" aria-hidden="true">↗</span>
         </div>
         <div class="car-card-meta">
@@ -214,16 +225,17 @@
     const usableGallery = gallery.length ? gallery : safeArray(car.gallery);
     const galleryMarkup = usableGallery.length ? `
       <div class="gallery-grid" aria-label="Photographs of ${escapeHTML(title)}">
-        ${usableGallery.map((photo, i) => `<button class="gallery-photo" type="button" data-index="${i}" aria-label="Open photo ${i + 1}">
-          <img src="${escapeHTML(imagePath(photo.src))}" alt="${escapeHTML(photo.alt || `${title} photo ${i + 1}`)}" loading="${i === 0 ? "eager" : "lazy"}">
-          <span class="gallery-photo-zoom" aria-hidden="true">↗</span>
+        ${usableGallery.map((photo, i) => `<button class="gallery-photo${photo.type === "video" ? " gallery-video" : ""}" type="button" data-index="${i}" data-type="${photo.type || "photo"}" aria-label="Open ${photo.type === "video" ? "video" : "photo"} ${i + 1}">
+          ${photo.type === "video"
+            ? `<video src="${escapeHTML(imagePath(photo.src))}" muted playsinline preload="metadata" aria-label="${escapeHTML(photo.alt || `${title} video ${i + 1}`)}" style="display:block;width:100%;height:100%;object-fit:cover;pointer-events:none"></video><span class="gallery-photo-zoom" aria-hidden="true">▶</span>`
+            : `<img src="${escapeHTML(imagePath(photo.src))}" alt="${escapeHTML(photo.alt || `${title} photo ${i + 1}`)}" loading="${i === 0 ? "eager" : "lazy"}"><span class="gallery-photo-zoom" aria-hidden="true">↗</span>`}
         </button>`).join("")}
       </div>
       <div class="gallery-empty" hidden>No photographs found. Check the car's image filenames and folder.</div>
       <div class="gallery-lightbox" id="gallery-lightbox" role="dialog" aria-modal="true" aria-label="Photo gallery" hidden>
         <button class="lightbox-close" type="button" aria-label="Close gallery">×</button>
         <button class="lightbox-nav lightbox-prev" type="button" aria-label="Previous photo">‹</button>
-        <figure class="lightbox-figure"><img id="lightbox-image" src="" alt=""><figcaption id="lightbox-caption"></figcaption></figure>
+        <figure class="lightbox-figure"><img id="lightbox-image" src="" alt=""><video id="lightbox-video" controls playsinline preload="metadata" hidden style="max-width:100%;max-height:calc(100vh - 130px);width:auto;height:auto;background:#000"></video><figcaption id="lightbox-caption"></figcaption></figure>
         <button class="lightbox-nav lightbox-next" type="button" aria-label="Next photo">›</button>
         <div class="lightbox-counter" id="lightbox-counter"></div>
       </div>` : `<div class="gallery-empty">Add photos to this car's folder in assets/</div>`;
@@ -247,7 +259,6 @@
         <section class="detail-section"><p class="eyebrow dark-eyebrow">Care & maintenance</p><h2>Work performed.</h2><p class="section-lead">Maintenance entries should be supported by invoices or service records where available.</p>
           ${maintenance.length ? `<div class="history-grid">${maintenance.map(item=>`<div class="history-block"><h3>${escapeHTML(item.date || "Service record")}</h3><p>${escapeHTML(item.description || item)}</p>${item.provider ? `<p><strong>Provider:</strong> ${escapeHTML(item.provider)}</p>` : ""}</div>`).join("")}</div>` : `<p class="detail-description">No maintenance records supplied.</p>`}
         </section>
-        ${videos.length ? `<section class="detail-section"><p class="eyebrow dark-eyebrow">Moving images</p><h2>In motion.</h2><div class="video-grid">${videos.map(video=>`<video controls preload="metadata" poster="${escapeHTML(imagePath(video.poster || ""))}"><source src="${escapeHTML(imagePath(video.src || video))}" type="${escapeHTML(video.type || "video/mp4")}">Your browser does not support video playback.</video>`).join("")}</div></section>` : ""}
         <section class="detail-cta"><div><h2>Interested in this 911?</h2><p>Request the full vehicle file, additional photographs or a delivery quote.</p></div><a class="button button-dark" href="mailto:${encodeURIComponent(car.contact_email || "hello@example.com")}?subject=${encodeURIComponent("Enquiry: " + title)}">Enquire about this car ↗</a></section>
       </main>
       <footer class="site-footer"><a class="wordmark footer-wordmark" href="./index.html"><span class="wordmark-mark">911</span><span class="wordmark-copy">ARCHIVE<span>CURATED PORSCHE</span></span></a><div class="footer-bottom"><span>© ${new Date().getFullYear()} 911 Archive</span><span>Independent collection. Not affiliated with Porsche AG.</span><a href="mailto:hello@example.com">Contact ↗</a></div></footer>
@@ -264,26 +275,43 @@
     root.innerHTML = detailTemplate(car);
     const lightbox = $("#gallery-lightbox");
     const lightboxImage = $("#lightbox-image");
+    const lightboxVideo = $("#lightbox-video");
     const lightboxCaption = $("#lightbox-caption");
     const lightboxCounter = $("#lightbox-counter");
     let activePhoto = 0;
     const visiblePhotos = () => $$(".gallery-photo", root).filter(button => {
+      if (button.hidden) return false;
+      if (button.dataset.type === "video") return true;
       const image = button.querySelector("img");
-      return !button.hidden && image && !image.hidden && image.complete && image.naturalWidth > 0;
+      return image && !image.hidden && image.complete && image.naturalWidth > 0;
     });
     const showPhoto = index => {
       const photos = visiblePhotos();
       if (!photos.length) return;
       activePhoto = (index + photos.length) % photos.length;
-      const image = photos[activePhoto].querySelector("img");
-      lightboxImage.src = image.currentSrc || image.src;
-      lightboxImage.alt = image.alt;
-      lightboxCaption.textContent = image.alt;
+      const button = photos[activePhoto];
+      const isVideo = button.dataset.type === "video";
+      const image = button.querySelector("img");
+      lightboxVideo.pause();
+      lightboxVideo.hidden = !isVideo;
+      lightboxImage.hidden = isVideo;
+      if (isVideo) {
+        lightboxVideo.src = button.querySelector("video").currentSrc || button.querySelector("video").src;
+        lightboxVideo.currentTime = 0;
+        lightboxVideo.play().catch(() => {});
+        lightboxCaption.textContent = button.querySelector("video").getAttribute("aria-label") || `Video ${activePhoto + 1}`;
+      } else {
+        lightboxVideo.removeAttribute("src");
+        lightboxVideo.load();
+        lightboxImage.src = image.currentSrc || image.src;
+        lightboxImage.alt = image.alt;
+        lightboxCaption.textContent = image.alt;
+      }
       lightboxCounter.textContent = `${activePhoto + 1} / ${photos.length}`;
       $(".lightbox-prev", lightbox).disabled = photos.length < 2;
       $(".lightbox-next", lightbox).disabled = photos.length < 2;
     };
-    const closeLightbox = () => { lightbox.hidden = true; document.body.classList.remove("lightbox-open"); };
+    const closeLightbox = () => { lightboxVideo.pause(); lightboxVideo.removeAttribute("src"); lightboxVideo.load(); lightbox.hidden = true; document.body.classList.remove("lightbox-open"); };
     $$(".gallery-photo", root).forEach(button => button.addEventListener("click", () => {
       const photos = visiblePhotos();
       const clicked = photos.indexOf(button);
