@@ -18,10 +18,10 @@ For each car, the `folder` and `prefix` in `cars.json` must be identical. Exampl
 
 Put photographs in `assets/Venice/`:
 
-- `Venice-Main.jpg` — used as the collection-card thumbnail only.
-- `Venice-01.jpg`, `Venice-02.jpg`, `Venice-03.jpg` … — shown in the individual car's gallery.
+- `Venice-Main.jpg` **or** `Venice-Main.webp` — used as the collection-card thumbnail only.
+- `Venice-01.jpg`, `Venice-02.webp`, `Venice-03.jpg` … — shown in the individual car's gallery. JPG and WebP can be mixed in the same gallery.
 
-Use a two-digit sequence (`01` through `99`), with no gaps in the numbering. The gallery checks the numbered files until the first missing number. File names and capitalization must match exactly. JPG extension is lowercase.
+Use a two-digit sequence (`01` through `99`), with no gaps in the numbering. The gallery checks the numbered files until the first missing number. File names and capitalization must match exactly; extensions should be lowercase (`.jpg` or `.webp`). If both extensions exist for the same image number, `.jpg` is preferred.
 
 The five-field `cars.json` format remains simple: `folder`, `prefix`, `imageAlt`, `title`, and `description`.
 

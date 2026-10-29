@@ -19,6 +19,25 @@
   const imagePath = path => path ? `./${String(path).replace(/^\.?\//, "")}` : "";
   const safeArray = value => Array.isArray(value) ? value : [];
 
+  // GitHub Pages cannot list a directory, so probe supported extensions in order.
+  // Keep the filename and capitalization convention intact; only the extension varies.
+  async function resolveImagePath(path) {
+    if (!path) return "";
+    const clean = String(path).replace(/^\.?\//, "");
+    const base = clean.replace(/\.(?:jpe?g|webp)$/i, "");
+    for (const extension of ["jpg", "webp"]) {
+      const candidate = `${base}.${extension}`;
+      const exists = await new Promise(resolve => {
+        const image = new Image();
+        image.onload = () => resolve(true);
+        image.onerror = () => resolve(false);
+        image.src = imagePath(candidate);
+      });
+      if (exists) return candidate;
+    }
+    return "";
+  }
+
   async function loadCars() {
     try {
       const response = await fetch(DATA_URL);
@@ -27,11 +46,11 @@
       if (!Array.isArray(entries)) throw new Error("cars.json must contain an array of cars.");
       // Public data stays in the user's simple five-field format.
       // Adapt it internally for the existing gallery UI.
-      return entries.map((entry, index) => {
+      return await Promise.all(entries.map(async (entry, index) => {
         const folder = String(entry.folder || "").replace(/^\/+|\/+$/g, "");
         const prefix = String(entry.prefix || folder).replace(/^\/+|\/+$/g, "");
-        // Main image is used for the collection thumbnail; numbered images power the detail gallery.
-        const image = folder && prefix ? `assets/${folder}/${prefix}-Main.jpg` : "";
+        // Main image is used for the collection thumbnail; either JPG or WebP is accepted.
+        const image = folder && prefix ? await resolveImagePath(`assets/${folder}/${prefix}-Main.jpg`) : "";
         const title = entry.title || `Porsche 911 ${index + 1}`;
         const seriesMatch = title.match(/\b(930|964|993|996|997|991|992)\b/);
         return {
@@ -58,7 +77,7 @@
           maintenance: [],
           videos: []
         };
-      });
+      }));
     } catch (error) {
       console.error(error);
       const grid = $("#car-grid");
@@ -128,14 +147,8 @@
     const prefix = car.prefix || car.folder;
     for (let number = 1; number <= 99; number++) {
       const sequence = String(number).padStart(2, "0");
-      const src = `assets/${car.folder}/${prefix}-${sequence}.jpg`;
-      const exists = await new Promise(resolve => {
-        const image = new Image();
-        image.onload = () => resolve(true);
-        image.onerror = () => resolve(false);
-        image.src = imagePath(src);
-      });
-      if (!exists) break;
+      const src = await resolveImagePath(`assets/${car.folder}/${prefix}-${sequence}.jpg`);
+      if (!src) break;
       photos.push({ src, alt: `${car.title} — photo ${sequence}` });
     }
     return photos;
@@ -155,7 +168,7 @@
       <div class="gallery-layout">
         <div class="gallery-main"><img id="gallery-main-image" src="${escapeHTML(imagePath(mainImage))}" alt="${escapeHTML(gallery[0]?.alt || title)}"><span class="gallery-count" id="gallery-count">01 / ${String(Math.max(gallery.length,1)).padStart(2,"0")}</span></div>
         <div class="gallery-thumbs">${gallery.slice(0,4).map((photo,i)=>`<button class="gallery-thumb ${i===0?"active":""}" data-index="${i}" aria-label="Show photo ${i+1}"><img src="${escapeHTML(imagePath(photo.src))}" alt="${escapeHTML(photo.alt || `${title} photo ${i+1}`)}" loading="${i===0?"eager":"lazy"}"></button>`).join("")}</div>
-      </div>` : `<div class="gallery-empty">Add numbered photos to <code>assets/${escapeHTML(car.folder)}/</code> using <code>${escapeHTML(car.prefix)}-01.jpg</code>, <code>${escapeHTML(car.prefix)}-02.jpg</code>, and so on.</div>`;
+      </div>` : `<div class="gallery-empty">Add numbered photos to <code>assets/${escapeHTML(car.folder)}/</code> using <code>${escapeHTML(car.prefix)}-01.jpg</code> or <code>${escapeHTML(car.prefix)}-01.webp</code>, and so on.</div>`;
     const maintenance = safeArray(car.maintenance);
     const owners = safeArray(car.previous_owners);
     const history = car.history || "Provenance and ownership history to be confirmed with the vehicle file.";
