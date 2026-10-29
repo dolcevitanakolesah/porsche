@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101211">
+  <meta name="description" content="A considered collection of exceptional Porsche 911 examples, curated for enthusiasts and collectors worldwide.">
+  <title>911 Archive — Curated Porsche 911s</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./script.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="wordmark" href="./index.html" aria-label="911 Archive home">
+      <span class="wordmark-mark">911</span>
+      <span class="wordmark-copy">ARCHIVE<span>CURATED PORSCHE</span></span>
+    </a>
+    <nav class="header-nav" aria-label="Main navigation">
+      <a href="#collection">The collection</a>
+      <a href="#approach">Our approach</a>
+      <a class="nav-contact" href="mailto:hello@example.com">Enquire <span aria-hidden="true">↗</span></a>
+    </nav>
+    <button class="menu-toggle" aria-label="Open navigation" aria-expanded="false">☰</button>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-image" role="img" aria-label="Porsche 911 on a mountain road"></div>
+      <div class="hero-shade"></div>
+      <div class="hero-content">
+        <p class="eyebrow"><span class="eyebrow-line"></span> A considered collection</p>
+        <h1>Icons, chosen<br><em>with intention.</em></h1>
+        <p class="hero-intro">Exceptional Porsche 911s from every era. Researched, presented and ready for their next chapter.</p>
+        <a class="text-link light-link" href="#collection">Explore the collection <span>↓</span></a>
+      </div>
+      <div class="hero-note"><span>930 — 992</span><span>Air-cooled to modern classics</span></div>
+    </section>
+
+    <section class="collection section-wrap" id="collection">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow dark-eyebrow">Available examples</p>
+          <h2>The collection<span class="period">.</span></h2>
+        </div>
+        <p class="section-description">Every car has a story. Discover the details behind each carefully selected example.</p>
+      </div>
+
+      <div class="collection-tools">
+        <div class="series-filter" id="series-filter" aria-label="Filter by 911 generation">
+          <button class="filter-chip active" data-series="all">All cars <span id="all-count">—</span></button>
+          <button class="filter-chip" data-series="930">930</button>
+          <button class="filter-chip" data-series="964">964</button>
+          <button class="filter-chip" data-series="993">993</button>
+          <button class="filter-chip" data-series="996">996</button>
+          <button class="filter-chip" data-series="997">997</button>
+          <button class="filter-chip" data-series="991">991</button>
+          <button class="filter-chip" data-series="992">992</button>
+        </div>
+        <label class="search-box"><span class="sr-only">Search the collection</span><span aria-hidden="true">⌕</span><input id="search-input" type="search" placeholder="Search cars" autocomplete="off"></label>
+      </div>
+
+      <div class="status-line"><span id="results-count">Loading collection…</span><span class="availability-key"><i></i> Available for enquiry</span></div>
+      <div id="car-grid" class="car-grid" aria-live="polite"></div>
+      <div id="empty-state" class="empty-state" hidden>
+        <p class="eyebrow dark-eyebrow">No matches</p><h3>Nothing in this search.</h3><p>Try another generation or search term.</p>
+        <button id="reset-filters" class="button button-dark">Reset filters</button>
+      </div>
+      <p class="collection-footnote">Availability and vehicle details are subject to confirmation. All prices are shown as listed.</p>
+    </section>
+
+    <section class="manifesto" id="approach">
+      <div class="manifesto-image" role="img" aria-label="Detail of a classic sports car"></div>
+      <div class="manifesto-copy">
+        <p class="eyebrow"><span class="eyebrow-line"></span> Beyond the badge</p>
+        <h2>Good cars.<br><em>Proper stories.</em></h2>
+        <p>We look beyond the specification sheet. Provenance, condition, maintenance and the details that make an individual car worth knowing — all brought together in one considered presentation.</p>
+        <a class="text-link light-link" href="mailto:hello@example.com">Tell us what you’re looking for <span>↗</span></a>
+      </div>
+    </section>
+
+    <section class="shipping-band">
+      <div class="shipping-icon" aria-hidden="true">↗</div>
+      <div><p class="eyebrow dark-eyebrow">From our collection to your garage</p><h2>Considered globally.<br>Delivered with care.</h2></div>
+      <p>Ask us about export documentation, enclosed transport and delivery options for your destination.</p>
+      <a class="button button-dark" href="mailto:hello@example.com">Discuss a car</a>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <a class="wordmark footer-wordmark" href="./index.html"><span class="wordmark-mark">911</span><span class="wordmark-copy">ARCHIVE<span>CURATED PORSCHE</span></span></a>
+    <p>Independent curation for people who love the 911.</p>
+    <div class="footer-bottom"><span>© <span id="year"></span> 911 Archive</span><span>Independent collection. Not affiliated with Porsche AG.</span><a href="mailto:hello@example.com">Contact ↗</a></div>
+  </footer>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

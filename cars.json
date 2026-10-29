@@ -1,0 +1,380 @@
+[
+  {
+    "id": "930-turbo-example",
+    "series": "930",
+    "year": 1987,
+    "title": "911 Turbo 3.3",
+    "price": 189000,
+    "currency": "EUR",
+    "price_display": "€189,000",
+    "mileage_km": 84200,
+    "mileage_display": "84,200 km",
+    "transmission": "5-speed manual",
+    "color": "Guards Red",
+    "interior_color": "Black leather",
+    "engine": "3.3L turbocharged flat-six",
+    "location": "Northern Italy",
+    "status": "Available",
+    "cover": "assets/930-turbo-example/exterior-front-3q.jpg",
+    "cover_alt": "Guards Red Porsche 911 Turbo 3.3, front three-quarter view",
+    "gallery": [
+      {
+        "src": "assets/930-turbo-example/exterior-front-3q.jpg",
+        "alt": "Front three-quarter exterior"
+      },
+      {
+        "src": "assets/930-turbo-example/exterior-rear-3q.jpg",
+        "alt": "Rear three-quarter exterior"
+      },
+      {
+        "src": "assets/930-turbo-example/interior-dashboard.jpg",
+        "alt": "Dashboard and steering wheel"
+      },
+      {
+        "src": "assets/930-turbo-example/interior-seats.jpg",
+        "alt": "Front seats and cabin"
+      }
+    ],
+    "description": "A classic wide-bodied 911 Turbo, presented as a considered example of the late 930 era. Replace this sample copy with a verified description of this specific car, including specification, condition, originality and any notable factory options.",
+    "history": "Sample entry: add a dated ownership timeline, country of first delivery, matching-numbers information where verified, and references to supporting documents.",
+    "previous_owners": [
+      "1987–1998 — First owner (details to be verified)",
+      "1998–2016 — Private collection (documentation to be added)",
+      "2016–present — Current custodian (details to be verified)"
+    ],
+    "maintenance": [
+      {
+        "date": "2024-05",
+        "description": "Major service — replace with the actual work performed and invoice reference.",
+        "provider": "Workshop name / location"
+      },
+      {
+        "date": "2023-10",
+        "description": "Brake and suspension inspection — sample entry; verify before publishing.",
+        "provider": "Workshop name / location"
+      }
+    ],
+    "videos": [
+      {
+        "src": "assets/930-turbo-example/walkaround.mp4",
+        "type": "video/mp4",
+        "poster": "assets/930-turbo-example/exterior-front-3q.jpg"
+      }
+    ],
+    "service_book": "Service book and invoices — confirm contents before publishing",
+    "stock_number": "911-001",
+    "contact_email": "hello@example.com"
+  },
+  {
+    "id": "964-carrera-example",
+    "series": "964",
+    "year": 1992,
+    "title": "911 Carrera 2 Coupé",
+    "price": 112000,
+    "currency": "EUR",
+    "price_display": "€112,000",
+    "mileage_km": 97600,
+    "mileage_display": "97,600 km",
+    "transmission": "5-speed manual",
+    "color": "Polar Silver Metallic",
+    "interior_color": "Black leather",
+    "engine": "3.6L naturally aspirated flat-six",
+    "location": "Switzerland",
+    "status": "Available",
+    "cover": "assets/964-carrera-example/exterior-front-3q.jpg",
+    "cover_alt": "Silver Porsche 911 Carrera 2 Coupé",
+    "gallery": [
+      {
+        "src": "assets/964-carrera-example/exterior-front-3q.jpg",
+        "alt": "Front three-quarter exterior"
+      },
+      {
+        "src": "assets/964-carrera-example/exterior-rear-3q.jpg",
+        "alt": "Rear three-quarter exterior"
+      },
+      {
+        "src": "assets/964-carrera-example/interior-dashboard.jpg",
+        "alt": "Dashboard"
+      },
+      {
+        "src": "assets/964-carrera-example/interior-seats.jpg",
+        "alt": "Interior seats"
+      }
+    ],
+    "description": "Sample description for a 964 Carrera 2 Coupé. Add confirmed details on specification, paintwork, mechanical condition and originality.",
+    "history": "Sample history placeholder. Add provenance only when supported by records.",
+    "previous_owners": [
+      "Ownership history to be verified"
+    ],
+    "maintenance": [
+      {
+        "date": "2024-02",
+        "description": "Sample service entry — replace with documented maintenance."
+      }
+    ],
+    "videos": [],
+    "service_book": "To be confirmed",
+    "stock_number": "911-002",
+    "contact_email": "hello@example.com"
+  },
+  {
+    "id": "993-carrera-example",
+    "series": "993",
+    "year": 1996,
+    "title": "911 Carrera Coupé",
+    "price": 139000,
+    "currency": "EUR",
+    "price_display": "€139,000",
+    "mileage_km": 68400,
+    "mileage_display": "68,400 km",
+    "transmission": "6-speed manual",
+    "color": "Midnight Blue Metallic",
+    "interior_color": "Neptune Blue",
+    "engine": "3.6L air-cooled flat-six",
+    "location": "Germany",
+    "status": "Available",
+    "cover": "assets/993-carrera-example/exterior-front-3q.jpg",
+    "cover_alt": "Blue Porsche 911 Carrera Coupé",
+    "gallery": [
+      {
+        "src": "assets/993-carrera-example/exterior-front-3q.jpg",
+        "alt": "Front three-quarter exterior"
+      },
+      {
+        "src": "assets/993-carrera-example/exterior-rear-3q.jpg",
+        "alt": "Rear three-quarter exterior"
+      },
+      {
+        "src": "assets/993-carrera-example/interior-dashboard.jpg",
+        "alt": "Dashboard"
+      },
+      {
+        "src": "assets/993-carrera-example/interior-seats.jpg",
+        "alt": "Interior"
+      }
+    ],
+    "description": "Sample listing for the final air-cooled generation. Replace with this car's verified specification and condition report.",
+    "history": "Sample history placeholder. Include delivery market, service history and ownership chronology where documented.",
+    "previous_owners": [
+      "Ownership details available on request, subject to verification"
+    ],
+    "maintenance": [
+      {
+        "date": "2023-11",
+        "description": "Sample entry — add verified service details and supporting invoices."
+      }
+    ],
+    "videos": [],
+    "service_book": "To be confirmed",
+    "stock_number": "911-003",
+    "contact_email": "hello@example.com"
+  },
+  {
+    "id": "996-gt3-example",
+    "series": "996",
+    "year": 2004,
+    "title": "911 GT3",
+    "price": 124000,
+    "currency": "EUR",
+    "price_display": "€124,000",
+    "mileage_km": 53200,
+    "mileage_display": "53,200 km",
+    "transmission": "6-speed manual",
+    "color": "Arctic Silver Metallic",
+    "interior_color": "Black",
+    "engine": "3.6L naturally aspirated flat-six",
+    "location": "France",
+    "status": "Available",
+    "cover": "assets/996-gt3-example/exterior-front-3q.jpg",
+    "cover_alt": "Silver Porsche 911 GT3",
+    "gallery": [
+      {
+        "src": "assets/996-gt3-example/exterior-front-3q.jpg",
+        "alt": "Front three-quarter exterior"
+      },
+      {
+        "src": "assets/996-gt3-example/exterior-rear-3q.jpg",
+        "alt": "Rear three-quarter exterior"
+      },
+      {
+        "src": "assets/996-gt3-example/interior-dashboard.jpg",
+        "alt": "Dashboard"
+      },
+      {
+        "src": "assets/996-gt3-example/interior-seats.jpg",
+        "alt": "Interior"
+      }
+    ],
+    "description": "Sample listing for a 996 GT3. Add confirmed model-year details, options, engine and gearbox information, and a specialist inspection summary.",
+    "history": "Sample history placeholder; document any track use only if reliably known.",
+    "previous_owners": [
+      "Ownership history to be verified"
+    ],
+    "maintenance": [
+      {
+        "date": "2024-01",
+        "description": "Sample service entry — replace with actual documented work."
+      }
+    ],
+    "videos": [],
+    "service_book": "To be confirmed",
+    "stock_number": "911-004",
+    "contact_email": "hello@example.com"
+  },
+  {
+    "id": "997-carrera-example",
+    "series": "997",
+    "year": 2008,
+    "title": "911 Carrera S Coupé",
+    "price": 89500,
+    "currency": "EUR",
+    "price_display": "€89,500",
+    "mileage_km": 72100,
+    "mileage_display": "72,100 km",
+    "transmission": "6-speed manual",
+    "color": "Carrara White",
+    "interior_color": "Black leather",
+    "engine": "3.8L naturally aspirated flat-six",
+    "location": "Belgium",
+    "status": "Available",
+    "cover": "assets/997-carrera-example/exterior-front-3q.jpg",
+    "cover_alt": "White Porsche 911 Carrera S Coupé",
+    "gallery": [
+      {
+        "src": "assets/997-carrera-example/exterior-front-3q.jpg",
+        "alt": "Front three-quarter exterior"
+      },
+      {
+        "src": "assets/997-carrera-example/exterior-rear-3q.jpg",
+        "alt": "Rear three-quarter exterior"
+      },
+      {
+        "src": "assets/997-carrera-example/interior-dashboard.jpg",
+        "alt": "Dashboard"
+      },
+      {
+        "src": "assets/997-carrera-example/interior-seats.jpg",
+        "alt": "Interior"
+      }
+    ],
+    "description": "Sample listing for a 997 Carrera S. Replace with accurate details, including the relevant engine generation and any known maintenance campaigns.",
+    "history": "Sample history placeholder. Add only verified provenance and ownership records.",
+    "previous_owners": [
+      "Ownership history to be verified"
+    ],
+    "maintenance": [
+      {
+        "date": "2024-03",
+        "description": "Sample entry — replace with documented maintenance."
+      }
+    ],
+    "videos": [],
+    "service_book": "To be confirmed",
+    "stock_number": "911-005",
+    "contact_email": "hello@example.com"
+  },
+  {
+    "id": "991-targa-example",
+    "series": "991",
+    "year": 2016,
+    "title": "911 Targa 4 GTS",
+    "price": 158000,
+    "currency": "EUR",
+    "price_display": "€158,000",
+    "mileage_km": 38900,
+    "mileage_display": "38,900 km",
+    "transmission": "7-speed PDK",
+    "color": "Agate Grey Metallic",
+    "interior_color": "Black leather / Alcantara",
+    "engine": "3.8L naturally aspirated flat-six",
+    "location": "Italy",
+    "status": "Available",
+    "cover": "assets/991-targa-example/exterior-front-3q.jpg",
+    "cover_alt": "Grey Porsche 911 Targa 4 GTS",
+    "gallery": [
+      {
+        "src": "assets/991-targa-example/exterior-front-3q.jpg",
+        "alt": "Front three-quarter exterior"
+      },
+      {
+        "src": "assets/991-targa-example/exterior-rear-3q.jpg",
+        "alt": "Rear three-quarter exterior"
+      },
+      {
+        "src": "assets/991-targa-example/interior-dashboard.jpg",
+        "alt": "Dashboard"
+      },
+      {
+        "src": "assets/991-targa-example/interior-seats.jpg",
+        "alt": "Interior"
+      }
+    ],
+    "description": "Sample listing for a 991 Targa 4 GTS. Confirm the exact model specification, factory options, service history and current condition before publication.",
+    "history": "Sample history placeholder. Add country of delivery, ownership and service chronology where supported by documentation.",
+    "previous_owners": [
+      "Ownership history to be verified"
+    ],
+    "maintenance": [
+      {
+        "date": "2025-01",
+        "description": "Sample entry — replace with verified maintenance and invoice details."
+      }
+    ],
+    "videos": [],
+    "service_book": "To be confirmed",
+    "stock_number": "911-006",
+    "contact_email": "hello@example.com"
+  },
+  {
+    "id": "992-carrera-example",
+    "series": "992",
+    "year": 2023,
+    "title": "911 Carrera GTS",
+    "price": 174000,
+    "currency": "EUR",
+    "price_display": "€174,000",
+    "mileage_km": 12600,
+    "mileage_display": "12,600 km",
+    "transmission": "8-speed PDK",
+    "color": "Chalk",
+    "interior_color": "Black leather / Race-Tex",
+    "engine": "3.0L twin-turbocharged flat-six",
+    "location": "Netherlands",
+    "status": "Available",
+    "cover": "assets/992-carrera-example/exterior-front-3q.jpg",
+    "cover_alt": "Modern Porsche 911 Carrera GTS",
+    "gallery": [
+      {
+        "src": "assets/992-carrera-example/exterior-front-3q.jpg",
+        "alt": "Front three-quarter exterior"
+      },
+      {
+        "src": "assets/992-carrera-example/exterior-rear-3q.jpg",
+        "alt": "Rear three-quarter exterior"
+      },
+      {
+        "src": "assets/992-carrera-example/interior-dashboard.jpg",
+        "alt": "Dashboard"
+      },
+      {
+        "src": "assets/992-carrera-example/interior-seats.jpg",
+        "alt": "Interior"
+      }
+    ],
+    "description": "Sample listing for a 992 Carrera GTS. Replace with the verified specification, warranty status, option list and inspection notes for the actual vehicle.",
+    "history": "Sample history placeholder. Add delivery and service records only after checking the original documentation.",
+    "previous_owners": [
+      "Ownership history to be verified"
+    ],
+    "maintenance": [
+      {
+        "date": "2025-04",
+        "description": "Sample entry — replace with documented maintenance."
+      }
+    ],
+    "videos": [],
+    "service_book": "To be confirmed",
+    "stock_number": "911-007",
+    "contact_email": "hello@example.com"
+  }
+]
