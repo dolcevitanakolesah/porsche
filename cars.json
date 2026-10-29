@@ -61,39 +61,6 @@
       "    ",
       "With 135,000 km, this iconic air-cooled 911 combines timeless design, pure driving pleasure, and outstanding collectible appeal."
     ]
-  },
-  {
-    "folder": "997-carrera-example",
-    "prefix": "997-carrera-example",
-    "imageAlt": "Porsche 911 generation 997 — sample image",
-    "title": "2008 Porsche 911 Carrera S",
-    "description": [
-      "A modern classic combining compact proportions with everyday usability.",
-      "Sample description — replace this text with the details of your specific car."
-    ]
-  },
-
-  
-  {
-    "folder": "991-targa-example",
-    "prefix": "991-targa-example",
-    "imageAlt": "Porsche 911 generation 991 — sample image",
-    "title": "2015 Porsche 911 Targa 4",
-    "description": [
-      "A contemporary Targa with the distinctive wraparound rear glass.",
-      "Sample description — replace this text with the details of your specific car."
-    ]
-  },
-
-  
-  {
-    "folder": "992-carrera-example",
-    "prefix": "992-carrera-example",
-    "imageAlt": "Porsche 911 generation 992 — sample image",
-    "title": "2021 Porsche 911 Carrera",
-    "description": [
-      "The current-generation design, blending familiar 911 lines with modern technology.",
-      "Sample description — replace this text with the details of your specific car."
-    ]
   }
+  
 ]
