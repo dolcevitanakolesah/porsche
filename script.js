@@ -31,18 +31,29 @@
   }
 
   function probeImage(stem, alt) {
+    // Probe supported extensions concurrently instead of waiting for each 404 in turn.
+    // This matters on GitHub Pages, where the gallery may contain many numbered photos.
     const extensions = ["jpg", "jpeg", "webp", "JPG", "JPEG", "WEBP"];
     return new Promise(resolve => {
-      let index = 0;
-      const tryNext = () => {
-        if (index >= extensions.length) { resolve(null); return; }
-        const src = `${stem}.${extensions[index++]}`;
+      let remaining = extensions.length;
+      let settled = false;
+      for (const extension of extensions) {
+        const src = `${stem}.${extension}`;
         const image = new Image();
-        image.onload = () => resolve({ src, stem, alt });
-        image.onerror = tryNext;
+        image.onload = () => {
+          if (settled) return;
+          settled = true;
+          resolve({ src, stem, alt });
+        };
+        image.onerror = () => {
+          remaining -= 1;
+          if (!remaining && !settled) {
+            settled = true;
+            resolve(null);
+          }
+        };
         image.src = src;
-      };
-      tryNext();
+      }
     });
   }
 
@@ -68,7 +79,7 @@
 
   async function loadCars() {
     try {
-      const response = await fetch(DATA_URL, { cache: "no-cache" });
+      const response = await fetch(DATA_URL);
       if (!response.ok) throw new Error(`Could not load cars.json (${response.status})`);
       const entries = await response.json();
       if (!Array.isArray(entries)) throw new Error("cars.json must contain an array of cars.");
