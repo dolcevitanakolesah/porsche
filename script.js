@@ -20,17 +20,78 @@
   const imagePath = path => path ? `./${String(path).replace(/^\.?\//, "")}` : "";
   const safeArray = value => Array.isArray(value) ? value : [];
 
+  // Read the simple cars.json schema and adapt it for this existing gallery.
+  // Car data stays in cars.json; no sample inventory is injected.
+  async function imageExists(path) {
+    return new Promise(resolve => {
+      const image = new Image();
+      image.onload = () => resolve(true);
+      image.onerror = () => resolve(false);
+      image.src = imagePath(path);
+    });
+  }
+
+  async function resolveCarImages(entry) {
+    const folder = String(entry.folder || "").replace(/^\/+|\/+$/g, "");
+    const prefix = String(entry.prefix || folder).replace(/^\/+|\/+$/g, "");
+    if (!folder || !prefix) return [];
+    const photos = [];
+    // Main image first, then numbered photos. Both JPG and WebP are supported.
+    const candidates = [`${prefix}-Main`, ...Array.from({length: 30}, (_, i) => `${prefix}-${String(i + 1).padStart(2, "0")}`)];
+    for (const stem of candidates) {
+      let found = "";
+      for (const ext of ["jpg", "jpeg", "webp", "JPG", "JPEG", "WEBP"]) {
+        const path = `assets/${folder}/${stem}.${ext}`;
+        if (await imageExists(path)) { found = path; break; }
+      }
+      if (found) photos.push({src: found, alt: entry.imageAlt || entry.title || "Porsche 911"});
+      // The Main image is enough to show a card; stop probing once numbered photos
+      // have started and the next number is missing.
+      if (stem !== `${prefix}-Main` && !found) break;
+    }
+    return photos;
+  }
+
   async function loadCars() {
     try {
       const response = await fetch(DATA_URL);
       if (!response.ok) throw new Error(`Could not load cars.json (${response.status})`);
-      const cars = await response.json();
-      if (!Array.isArray(cars)) throw new Error("cars.json must contain an array of cars.");
-      return cars;
+      const entries = await response.json();
+      if (!Array.isArray(entries)) throw new Error("cars.json must contain an array of cars.");
+      return await Promise.all(entries.map(async (entry, index) => {
+        const title = String(entry.title || `Porsche 911 ${index + 1}`);
+        const seriesMatch = title.match(/\b(930|964|993|996|997|991|992)\b/);
+        const photos = await resolveCarImages(entry);
+        const price = String(entry.price || "").trim();
+        const mileage = String(entry.mileage || "").trim();
+        const description = Array.isArray(entry.description)
+          ? entry.description.filter(part => String(part).trim()).join("\n\n")
+          : String(entry.description || "");
+        return {
+          ...entry,
+          id: String(entry.folder || entry.prefix || `car-${index + 1}`),
+          series: seriesMatch ? seriesMatch[1] : "911",
+          year: entry.year || (title.match(/\b(?:19|20)\d{2}\b/) || [])[0] || "",
+          price: null,
+          currency: "EUR",
+          price_display: price || "Price on request",
+          mileage_display: mileage || "Mileage not specified",
+          mileage_km: null,
+          engine: [entry.displacement, entry.power].filter(Boolean).join(" "),
+          cover: photos[0]?.src || "",
+          cover_alt: entry.imageAlt || `${title} exterior`,
+          gallery: photos,
+          description,
+          status: "Available for enquiry",
+          previous_owners: [],
+          maintenance: [],
+          videos: []
+        };
+      }));
     } catch (error) {
-      console.error(error);
+      console.error("Unable to load car inventory:", error);
       const grid = $("#car-grid");
-      if (grid) grid.innerHTML = `<div class="load-error"><strong>Collection unavailable.</strong><p>Check that cars.json is in the repository root and open this page through GitHub Pages or a local web server.</p></div>`;
+      if (grid) grid.innerHTML = `<div class="load-error"><strong>Collection unavailable.</strong><p>Check that cars.json is valid JSON and is in the repository root. Open the site through GitHub Pages or a local web server.</p></div>`;
       return [];
     }
   }
