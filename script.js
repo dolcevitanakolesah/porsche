@@ -72,18 +72,27 @@
       if (!photo) break;
       items.push({ ...photo, type: "photo" });
     }
-    // Probe videos only after photos so they are appended at the end. HEAD avoids
-    // downloading the video just to discover whether the file exists.
-    for (let number = 1; number <= 20; number++) {
+    // Probe video filenames independently (in parallel), after all photos.
+    // Do not stop at the first missing number: repositories may contain gaps,
+    // and some static hosts handle HEAD requests inconsistently. A ranged GET
+    // checks the real asset URL while avoiding a full video download.
+    const videoChecks = await Promise.all(Array.from({ length: 20 }, async (_, index) => {
+      const number = index + 1;
       const label = String(number).padStart(2, "0");
       const src = `assets/${folder}/${prefix}-video-${label}.mp4`;
-      let exists = false;
       try {
-        const response = await fetch(src, { method: "HEAD" });
-        exists = response.ok;
-      } catch (_) { exists = false; }
-      if (!exists) break;
-      items.push({ type: "video", src, stem: src, alt: `${altBase} — video ${label}` });
+        let response = await fetch(src, { method: "HEAD" });
+        if (response.status === 405 || response.status === 501) {
+          response = await fetch(src, { headers: { Range: "bytes=0-0" } });
+        }
+        if (response.ok || response.status === 206) {
+          return { number, item: { type: "video", src, stem: src, alt: `${altBase} — video ${label}` } };
+        }
+      } catch (_) { /* A missing video should not prevent other videos loading. */ }
+      return null;
+    }));
+    for (const result of videoChecks.filter(Boolean).sort((a, b) => a.number - b.number)) {
+      items.push(result.item);
     }
     return items;
   }
@@ -227,7 +236,7 @@
       <div class="gallery-grid" aria-label="Photographs of ${escapeHTML(title)}">
         ${usableGallery.map((photo, i) => `<button class="gallery-photo${photo.type === "video" ? " gallery-video" : ""}" type="button" data-index="${i}" data-type="${photo.type || "photo"}" aria-label="Open ${photo.type === "video" ? "video" : "photo"} ${i + 1}">
           ${photo.type === "video"
-            ? `<video src="${escapeHTML(imagePath(photo.src))}" muted playsinline preload="metadata" aria-label="${escapeHTML(photo.alt || `${title} video ${i + 1}`)}" style="display:block;width:100%;height:100%;object-fit:cover;pointer-events:none"></video><span class="gallery-photo-zoom" aria-hidden="true">▶</span>`
+            ? `<video muted playsinline preload="metadata" aria-label="${escapeHTML(photo.alt || `${title} video ${i + 1}`)}" style="display:block;width:100%;height:100%;object-fit:cover;pointer-events:none"><source src="${escapeHTML(imagePath(photo.src))}" type="video/mp4"></video><span class="gallery-photo-zoom" aria-hidden="true">▶</span>`
             : `<img src="${escapeHTML(imagePath(photo.src))}" alt="${escapeHTML(photo.alt || `${title} photo ${i + 1}`)}" loading="${i === 0 ? "eager" : "lazy"}"><span class="gallery-photo-zoom" aria-hidden="true">↗</span>`}
         </button>`).join("")}
       </div>
@@ -235,7 +244,7 @@
       <div class="gallery-lightbox" id="gallery-lightbox" role="dialog" aria-modal="true" aria-label="Photo gallery" hidden>
         <button class="lightbox-close" type="button" aria-label="Close gallery">×</button>
         <button class="lightbox-nav lightbox-prev" type="button" aria-label="Previous photo">‹</button>
-        <figure class="lightbox-figure"><img id="lightbox-image" src="" alt=""><video id="lightbox-video" controls playsinline preload="metadata" hidden style="max-width:100%;max-height:calc(100vh - 130px);width:auto;height:auto;background:#000"></video><figcaption id="lightbox-caption"></figcaption></figure>
+        <figure class="lightbox-figure"><img id="lightbox-image" src="" alt=""><video id="lightbox-video" controls playsinline preload="metadata" hidden style="max-width:100%;max-height:calc(100vh - 130px);width:auto;height:auto;background:#000"><source id="lightbox-video-source" type="video/mp4"></video><figcaption id="lightbox-caption"></figcaption></figure>
         <button class="lightbox-nav lightbox-next" type="button" aria-label="Next photo">›</button>
         <div class="lightbox-counter" id="lightbox-counter"></div>
       </div>` : `<div class="gallery-empty">Add photos to this car's folder in assets/</div>`;
@@ -276,6 +285,7 @@
     const lightbox = $("#gallery-lightbox");
     const lightboxImage = $("#lightbox-image");
     const lightboxVideo = $("#lightbox-video");
+    const lightboxVideoSource = $("#lightbox-video-source");
     const lightboxCaption = $("#lightbox-caption");
     const lightboxCounter = $("#lightbox-counter");
     let activePhoto = 0;
@@ -296,12 +306,14 @@
       lightboxVideo.hidden = !isVideo;
       lightboxImage.hidden = isVideo;
       if (isVideo) {
-        lightboxVideo.src = button.querySelector("video").currentSrc || button.querySelector("video").src;
+        const videoSource = button.querySelector("video source");
+        lightboxVideoSource.src = videoSource ? videoSource.src : (button.querySelector("video").currentSrc || button.querySelector("video").src);
+        lightboxVideo.load();
         lightboxVideo.currentTime = 0;
         lightboxVideo.play().catch(() => {});
         lightboxCaption.textContent = button.querySelector("video").getAttribute("aria-label") || `Video ${activePhoto + 1}`;
       } else {
-        lightboxVideo.removeAttribute("src");
+        lightboxVideoSource.removeAttribute("src");
         lightboxVideo.load();
         lightboxImage.src = image.currentSrc || image.src;
         lightboxImage.alt = image.alt;
@@ -311,7 +323,7 @@
       $(".lightbox-prev", lightbox).disabled = photos.length < 2;
       $(".lightbox-next", lightbox).disabled = photos.length < 2;
     };
-    const closeLightbox = () => { lightboxVideo.pause(); lightboxVideo.removeAttribute("src"); lightboxVideo.load(); lightbox.hidden = true; document.body.classList.remove("lightbox-open"); };
+    const closeLightbox = () => { lightboxVideo.pause(); lightboxVideoSource.removeAttribute("src"); lightboxVideo.load(); lightbox.hidden = true; document.body.classList.remove("lightbox-open"); };
     $$(".gallery-photo", root).forEach(button => button.addEventListener("click", () => {
       const photos = visiblePhotos();
       const clicked = photos.indexOf(button);
