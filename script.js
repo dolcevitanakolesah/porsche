@@ -53,8 +53,8 @@
     const dir = `assets/${folder}/${prefix}`;
     const altBase = car.imageAlt || car.title || "Porsche 911";
     const photos = [];
-    const main = await probeImage(`${dir}-Main`, `${altBase} — main photo`);
-    if (main) photos.push(main);
+    // -Main is reserved for the collection-card thumbnail. The per-car gallery
+    // must contain numbered photos only: Prefix-01, Prefix-02, and so on.
     // Numbered photos are expected to be sequential; stop at the first missing number.
     for (let number = 1; number <= 30; number++) {
       const label = String(number).padStart(2, "0");
