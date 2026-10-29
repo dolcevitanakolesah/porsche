@@ -10,14 +10,16 @@
       "Equipped with 16-inch Porsche Design wheels, air conditioning, cruise control and electric seats, it comes with its history file, Porsche booklets, owner’s manual, service book, original tool kit and spare keys."
     ]
   },
+  
   {
-    "folder": "964-carrera-example",
-    "prefix": "964-carrera-example",
-    "imageAlt": "Porsche 911 generation 964 — sample image",
-    "title": "1992 Porsche 911 Carrera 2",
+    "folder": "993-Ravenna",
+    "prefix": "993-Ravenna",
+    "imageAlt": "Porsche 993",
+    "title": "На исходе эпохи: 1994 Porsche 993",
     "description": [
-      "The 964 brought modernised engineering while keeping the classic 911 character.",
-      "Sample description — replace this text with the details of your specific car."
+      "Есть автомобили, которые знаменуют собой конец эпохи. Этот Porsche 911 (993) Carrera 2 1994 года - именно такой: ранний экземпляр последнего поколения с воздушным охлаждением, с 272-сильным оппозитным 6ти-цилиндровым двигателем, задним приводом и 6ти-ступенчатой механикой.",
+      "    ",
+      "Кузов в оригинальном синем металлике, чёрный салон, заводская комплектация. А также документированная история обслуживания, сервисная книжка и счета. На одометре - 142 000 км. Отличный шанс получить «аналоговый» 911 во всей своей красе. Количество таких экземляров, увы, не растёт."
     ]
   },
   {
