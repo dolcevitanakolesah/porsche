@@ -20,48 +20,25 @@
   const imagePath = path => path ? `./${String(path).replace(/^\.?\//, "")}` : "";
   const safeArray = value => Array.isArray(value) ? value : [];
 
-  // Read the simple cars.json schema and adapt it for this existing gallery.
-  // Car data stays in cars.json; no sample inventory is injected.
-  async function imageExists(path) {
-    return new Promise(resolve => {
-      const image = new Image();
-      image.onload = () => resolve(true);
-      image.onerror = () => resolve(false);
-      image.src = imagePath(path);
-    });
-  }
-
-  async function resolveCarImages(entry) {
+  // Build the conventional image paths directly. Do not probe every possible file
+  // before rendering the inventory: absent optional photos must never hide the cars.
+  function resolveCarImages(entry) {
     const folder = String(entry.folder || "").replace(/^\/+|\/+$/g, "");
     const prefix = String(entry.prefix || folder).replace(/^\/+|\/+$/g, "");
     if (!folder || !prefix) return [];
-    const photos = [];
-    // Main image first, then numbered photos. Both JPG and WebP are supported.
-    const candidates = [`${prefix}-Main`, ...Array.from({length: 30}, (_, i) => `${prefix}-${String(i + 1).padStart(2, "0")}`)];
-    for (const stem of candidates) {
-      let found = "";
-      for (const ext of ["jpg", "jpeg", "webp", "JPG", "JPEG", "WEBP"]) {
-        const path = `assets/${folder}/${stem}.${ext}`;
-        if (await imageExists(path)) { found = path; break; }
-      }
-      if (found) photos.push({src: found, alt: entry.imageAlt || entry.title || "Porsche 911"});
-      // The Main image is enough to show a card; stop probing once numbered photos
-      // have started and the next number is missing.
-      if (stem !== `${prefix}-Main` && !found) break;
-    }
-    return photos;
+    return [{ src: `assets/${folder}/${prefix}-Main.jpg`, alt: entry.imageAlt || entry.title || "Porsche 911" }];
   }
 
   async function loadCars() {
     try {
-      const response = await fetch(DATA_URL);
+      const response = await fetch(DATA_URL, { cache: "no-cache" });
       if (!response.ok) throw new Error(`Could not load cars.json (${response.status})`);
       const entries = await response.json();
       if (!Array.isArray(entries)) throw new Error("cars.json must contain an array of cars.");
-      return await Promise.all(entries.map(async (entry, index) => {
+      return entries.map((entry, index) => {
         const title = String(entry.title || `Porsche 911 ${index + 1}`);
         const seriesMatch = title.match(/\b(930|964|993|996|997|991|992)\b/);
-        const photos = await resolveCarImages(entry);
+        const photos = resolveCarImages(entry);
         const price = String(entry.price || "").trim();
         const mileage = String(entry.mileage || "").trim();
         const description = Array.isArray(entry.description)
@@ -72,11 +49,9 @@
           id: String(entry.folder || entry.prefix || `car-${index + 1}`),
           series: seriesMatch ? seriesMatch[1] : "911",
           year: entry.year || (title.match(/\b(?:19|20)\d{2}\b/) || [])[0] || "",
-          price: null,
           currency: "EUR",
           price_display: price || "Price on request",
           mileage_display: mileage || "Mileage not specified",
-          mileage_km: null,
           engine: [entry.displacement, entry.power].filter(Boolean).join(" "),
           cover: photos[0]?.src || "",
           cover_alt: entry.imageAlt || `${title} exterior`,
@@ -87,13 +62,30 @@
           maintenance: [],
           videos: []
         };
-      }));
+      });
     } catch (error) {
       console.error("Unable to load car inventory:", error);
       const grid = $("#car-grid");
-      if (grid) grid.innerHTML = `<div class="load-error"><strong>Collection unavailable.</strong><p>Check that cars.json is valid JSON and is in the repository root. Open the site through GitHub Pages or a local web server.</p></div>`;
+      if (grid) grid.innerHTML = `<div class="load-error"><strong>Collection unavailable.</strong><p>${escapeHTML(error.message || "Unable to load cars.json.")} Check that cars.json is in the repository root and that the site is opened through GitHub Pages or a local web server.</p></div>`;
       return [];
     }
+  }
+
+  function attachImageFallbacks(parent = document) {
+    $$("img[data-image-stem]", parent).forEach(img => {
+      const stem = img.dataset.imageStem;
+      const extensions = ["jpg", "jpeg", "webp", "JPG", "JPEG", "WEBP"];
+      let index = 1;
+      img.addEventListener("error", function retry() {
+        if (index >= extensions.length) {
+          img.hidden = true;
+          const fallback = img.nextElementSibling;
+          if (fallback && fallback.classList.contains("car-image-fallback")) fallback.hidden = false;
+          return;
+        }
+        img.src = `${stem}.${extensions[index++]}`;
+      });
+    });
   }
 
   function renderCard(car) {
@@ -104,7 +96,7 @@
     return `<article class="car-card">
       <a class="car-card-link" href="${escapeHTML(carHref(car))}" aria-label="View ${escapeHTML(title)}">
         <div class="car-image-wrap">
-          ${img ? `<img class="car-image" src="${escapeHTML(img)}" alt="${escapeHTML(alt)}" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><div class="car-image-fallback" hidden>911</div>` : `<div class="car-image-fallback">911</div>`}
+          ${img ? `<img class="car-image" data-image-stem="${escapeHTML(img.replace(/\.(?:jpg|jpeg|webp)$/i, ""))}" src="${escapeHTML(img)}" alt="${escapeHTML(alt)}" loading="lazy"><div class="car-image-fallback" hidden>911</div>` : `<div class="car-image-fallback">911</div>`}
           <span class="card-status">${escapeHTML(car.status || "Available")}</span>
           <span class="card-arrow" aria-hidden="true">↗</span>
         </div>
@@ -131,6 +123,7 @@
         return matchesSeries && haystack.includes(query.toLowerCase());
       });
       grid.innerHTML = filtered.map(renderCard).join("");
+      attachImageFallbacks(grid);
       $("#results-count").textContent = `${filtered.length} ${filtered.length === 1 ? "car" : "cars"} shown`;
       $("#all-count").textContent = cars.length;
       $("#empty-state").hidden = filtered.length !== 0;
