@@ -20,14 +20,51 @@
   const imagePath = path => path ? `./${String(path).replace(/^\.?\//, "")}` : "";
   const safeArray = value => Array.isArray(value) ? value : [];
 
-  // Build the conventional image paths directly. Do not probe every possible file
-  // before rendering the inventory: absent optional photos must never hide the cars.
+  // Gallery convention: Prefix-Main.jpg, Prefix-01.jpg, Prefix-02.jpg, ...
+  // Listing cards use the main image; the detail view discovers only photos that exist.
   function resolveCarImages(entry) {
     const folder = String(entry.folder || "").replace(/^\/+|\/+$/g, "");
     const prefix = String(entry.prefix || folder).replace(/^\/+|\/+$/g, "");
     if (!folder || !prefix) return [];
-    return [{ src: `assets/${folder}/${prefix}-Main.jpg`, alt: entry.imageAlt || entry.title || "Porsche 911" }];
+    const stem = `assets/${folder}/${prefix}-Main`;
+    return [{ src: `${stem}.jpg`, stem, alt: entry.imageAlt || entry.title || "Porsche 911" }];
   }
+
+  function probeImage(stem, alt) {
+    const extensions = ["jpg", "jpeg", "webp", "JPG", "JPEG", "WEBP"];
+    return new Promise(resolve => {
+      let index = 0;
+      const tryNext = () => {
+        if (index >= extensions.length) { resolve(null); return; }
+        const src = `${stem}.${extensions[index++]}`;
+        const image = new Image();
+        image.onload = () => resolve({ src, stem, alt });
+        image.onerror = tryNext;
+        image.src = src;
+      };
+      tryNext();
+    });
+  }
+
+  async function discoverCarGallery(car) {
+    const folder = String(car.folder || "").replace(/^\/+|\/+$/g, "");
+    const prefix = String(car.prefix || folder).replace(/^\/+|\/+$/g, "");
+    if (!folder || !prefix) return [];
+    const dir = `assets/${folder}/${prefix}`;
+    const altBase = car.imageAlt || car.title || "Porsche 911";
+    const photos = [];
+    const main = await probeImage(`${dir}-Main`, `${altBase} — main photo`);
+    if (main) photos.push(main);
+    // Numbered photos are expected to be sequential; stop at the first missing number.
+    for (let number = 1; number <= 30; number++) {
+      const label = String(number).padStart(2, "0");
+      const photo = await probeImage(`${dir}-${label}`, `${altBase} — photo ${label}`);
+      if (!photo) break;
+      photos.push(photo);
+    }
+    return photos;
+  }
+
 
   async function loadCars() {
     try {
@@ -72,17 +109,29 @@
   }
 
   function attachImageFallbacks(parent = document) {
-    $$("img[data-image-stem]", parent).forEach(img => {
+    $$('img[data-image-stem]', parent).forEach(img => {
+      if (img.dataset.fallbackBound === "true") return;
+      img.dataset.fallbackBound = "true";
       const stem = img.dataset.imageStem;
       const extensions = ["jpg", "jpeg", "webp", "JPG", "JPEG", "WEBP"];
       let index = 1;
-      img.addEventListener("error", function retry() {
-        if (index >= extensions.length) {
+      const settle = () => {
+        const button = img.closest(".gallery-photo");
+        if (button) {
+          button.hidden = true;
+          const gallery = button.closest(".gallery-grid");
+          if (gallery && !gallery.querySelector(".gallery-photo:not([hidden])")) {
+            const empty = gallery.parentElement.querySelector(".gallery-empty");
+            if (empty) empty.hidden = false;
+          }
+        } else {
           img.hidden = true;
           const fallback = img.nextElementSibling;
           if (fallback && fallback.classList.contains("car-image-fallback")) fallback.hidden = false;
-          return;
         }
+      };
+      img.addEventListener("error", function retry() {
+        if (index >= extensions.length) { settle(); return; }
         img.src = `${stem}.${extensions[index++]}`;
       });
     });
@@ -151,12 +200,22 @@
       ["Mileage", formatMileage(car)], ["Displacement", car.displacement || "Not specified"],
       ["Power", car.power || "Not specified"], ["Transmission", car.transmission || "Not specified"]
     ];
-    const mainImage = gallery[0]?.src || car.cover;
-    const galleryMarkup = mainImage ? `
-      <div class="gallery-layout">
-        <div class="gallery-main"><img id="gallery-main-image" src="${escapeHTML(imagePath(mainImage))}" alt="${escapeHTML(gallery[0]?.alt || title)}"><span class="gallery-count" id="gallery-count">01 / ${String(Math.max(gallery.length,1)).padStart(2,"0")}</span></div>
-        <div class="gallery-thumbs">${gallery.slice(0,4).map((photo,i)=>`<button class="gallery-thumb ${i===0?"active":""}" data-index="${i}" aria-label="Show photo ${i+1}"><img src="${escapeHTML(imagePath(photo.src))}" alt="${escapeHTML(photo.alt || `${title} photo ${i+1}`)}" loading="${i===0?"eager":"lazy"}"></button>`).join("")}</div>
-      </div>` : `<div class="gallery-empty">Add photos to this car's gallery in cars.json</div>`;
+    const usableGallery = gallery.length ? gallery : safeArray(car.gallery);
+    const galleryMarkup = usableGallery.length ? `
+      <div class="gallery-grid" aria-label="Photographs of ${escapeHTML(title)}">
+        ${usableGallery.map((photo, i) => `<button class="gallery-photo" type="button" data-index="${i}" aria-label="Open photo ${i + 1}">
+          <img src="${escapeHTML(imagePath(photo.src))}" alt="${escapeHTML(photo.alt || `${title} photo ${i + 1}`)}" loading="${i === 0 ? "eager" : "lazy"}">
+          <span class="gallery-photo-zoom" aria-hidden="true">↗</span>
+        </button>`).join("")}
+      </div>
+      <div class="gallery-empty" hidden>No photographs found. Check the car's image filenames and folder.</div>
+      <div class="gallery-lightbox" id="gallery-lightbox" role="dialog" aria-modal="true" aria-label="Photo gallery" hidden>
+        <button class="lightbox-close" type="button" aria-label="Close gallery">×</button>
+        <button class="lightbox-nav lightbox-prev" type="button" aria-label="Previous photo">‹</button>
+        <figure class="lightbox-figure"><img id="lightbox-image" src="" alt=""><figcaption id="lightbox-caption"></figcaption></figure>
+        <button class="lightbox-nav lightbox-next" type="button" aria-label="Next photo">›</button>
+        <div class="lightbox-counter" id="lightbox-counter"></div>
+      </div>` : `<div class="gallery-empty">Add photos to this car's folder in assets/</div>`;
     const maintenance = safeArray(car.maintenance);
     const owners = safeArray(car.previous_owners);
     const history = car.history || "No separate history details supplied.";
@@ -184,23 +243,55 @@
     </div>`;
   }
 
-  function initDetail(cars, id) {
+  async function initDetail(cars, id) {
     const car = cars.find(item => String(item.id) === id);
     if (!car) {
       root.innerHTML = `<div class="detail-not-found"><p class="eyebrow dark-eyebrow">404 / Car not found</p><h1>This 911 isn't in the collection.</h1><p>It may have been removed or the link may be incorrect.</p><a class="button button-dark" href="./index.html">Return to collection</a></div>`;
       return;
     }
+    car.gallery = await discoverCarGallery(car);
     root.innerHTML = detailTemplate(car);
-    const gallery = safeArray(car.gallery);
-    $$(".gallery-thumb").forEach(button => button.addEventListener("click", () => {
-      const index = Number(button.dataset.index);
-      const photo = gallery[index];
-      if (!photo) return;
-      $("#gallery-main-image").src = imagePath(photo.src);
-      $("#gallery-main-image").alt = photo.alt || `${car.title} photo ${index+1}`;
-      $("#gallery-count").textContent = `${String(index+1).padStart(2,"0")} / ${String(Math.max(gallery.length,1)).padStart(2,"0")}`;
-      $$(".gallery-thumb").forEach(item => item.classList.toggle("active", item === button));
+    const lightbox = $("#gallery-lightbox");
+    const lightboxImage = $("#lightbox-image");
+    const lightboxCaption = $("#lightbox-caption");
+    const lightboxCounter = $("#lightbox-counter");
+    let activePhoto = 0;
+    const visiblePhotos = () => $$(".gallery-photo", root).filter(button => {
+      const image = button.querySelector("img");
+      return !button.hidden && image && !image.hidden && image.complete && image.naturalWidth > 0;
+    });
+    const showPhoto = index => {
+      const photos = visiblePhotos();
+      if (!photos.length) return;
+      activePhoto = (index + photos.length) % photos.length;
+      const image = photos[activePhoto].querySelector("img");
+      lightboxImage.src = image.currentSrc || image.src;
+      lightboxImage.alt = image.alt;
+      lightboxCaption.textContent = image.alt;
+      lightboxCounter.textContent = `${activePhoto + 1} / ${photos.length}`;
+      $(".lightbox-prev", lightbox).disabled = photos.length < 2;
+      $(".lightbox-next", lightbox).disabled = photos.length < 2;
+    };
+    const closeLightbox = () => { lightbox.hidden = true; document.body.classList.remove("lightbox-open"); };
+    $$(".gallery-photo", root).forEach(button => button.addEventListener("click", () => {
+      const photos = visiblePhotos();
+      const clicked = photos.indexOf(button);
+      if (clicked < 0) return;
+      lightbox.hidden = false;
+      document.body.classList.add("lightbox-open");
+      showPhoto(clicked);
+      $(".lightbox-close", lightbox).focus();
     }));
+    $(".lightbox-close", lightbox)?.addEventListener("click", closeLightbox);
+    $(".lightbox-prev", lightbox)?.addEventListener("click", () => showPhoto(activePhoto - 1));
+    $(".lightbox-next", lightbox)?.addEventListener("click", () => showPhoto(activePhoto + 1));
+    lightbox?.addEventListener("click", event => { if (event.target === lightbox) closeLightbox(); });
+    document.addEventListener("keydown", event => {
+      if (!lightbox || lightbox.hidden) return;
+      if (event.key === "Escape") closeLightbox();
+      else if (event.key === "ArrowLeft") showPhoto(activePhoto - 1);
+      else if (event.key === "ArrowRight") showPhoto(activePhoto + 1);
+    });
   }
 
   async function boot() {
