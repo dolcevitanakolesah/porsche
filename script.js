@@ -311,10 +311,34 @@
       });
       ghost.hidden = true;
     };
+    // Some cars have no 1920 file. If the 1920 candidate fails to load, remember that for this photo and
+    // fall back to the 1200 file (works for the main image, the neighbour preview and the preloads).
+    const without1920 = new Set();
+    const onLightboxError = event => {
+      const el = event.target;
+      const stem = el.dataset.stem;
+      if (!stem || !el.getAttribute("srcset")) return;
+      without1920.add(stem);
+      el.removeAttribute("srcset");
+      el.src = imagePath(variant(stem, 1200));
+    };
+    const assignLightboxSource = (el, stem) => {
+      el.dataset.stem = stem;
+      el.sizes = LIGHTBOX_SIZES_ATTR;
+      if (without1920.has(stem)) el.removeAttribute("srcset");
+      else el.srcset = srcsetOf(stem, LIGHTBOX_SIZES); // browser picks 1200 or 1920 for this screen
+      el.src = imagePath(variant(stem, 1200));
+    };
+    const preloadLightbox = stem => {
+      const warm = new Image();
+      warm.addEventListener("error", onLightboxError);
+      assignLightboxSource(warm, stem);
+      return warm;
+    };
+    lightboxImage.addEventListener("error", onLightboxError);
+    ghost.addEventListener("error", onLightboxError);
     const setLightboxImage = (stem, alt) => {
-      lightboxImage.sizes = LIGHTBOX_SIZES_ATTR;
-      lightboxImage.srcset = srcsetOf(stem, LIGHTBOX_SIZES); // browser picks 1200 or 1920 for this screen
-      lightboxImage.src = imagePath(variant(stem, 1200));
+      assignLightboxSource(lightboxImage, stem);
       lightboxImage.alt = alt;
     };
     // direction: +1 = next (slides in from the right), -1 = previous (from the left), 0 = no animation.
@@ -347,10 +371,7 @@
           const slideOut = lightboxImage.animate(
             [{ transform: "translateX(0)", opacity: 1 }, { transform: `translateX(${-direction * 30}%)`, opacity: 0 }],
             { duration: 100, easing: "ease-in", fill: "forwards" });
-          const incoming = new Image();
-          incoming.sizes = LIGHTBOX_SIZES_ATTR;
-          incoming.srcset = srcsetOf(stem, LIGHTBOX_SIZES);
-          incoming.src = imagePath(variant(stem, 1200));
+          const incoming = preloadLightbox(stem);
           Promise.all([slideOut.finished.catch(() => {}), incoming.decode().catch(() => {})]).then(() => {
             if (token !== slideToken) return; // a newer swipe took over
             clearMotion();
@@ -375,10 +396,7 @@
         [1, -1].forEach(step => {
           const neighbour = photos[(activePhoto + step + photos.length) % photos.length];
           if (neighbour && neighbour.dataset.stem && neighbour !== button) {
-            const warm = new Image();
-            warm.sizes = LIGHTBOX_SIZES_ATTR;
-            warm.srcset = srcsetOf(neighbour.dataset.stem, LIGHTBOX_SIZES);
-            warm.src = imagePath(variant(neighbour.dataset.stem, 1200));
+            preloadLightbox(neighbour.dataset.stem);
           }
         });
       }
@@ -410,9 +428,7 @@
       const photos = visiblePhotos();
       const neighbour = photos[(activePhoto + side + photos.length) % photos.length];
       if (photos.length < 2 || !neighbour || neighbour.dataset.type === "video" || !neighbour.dataset.stem) { ghost.hidden = true; return; }
-      ghost.sizes = LIGHTBOX_SIZES_ATTR;
-      ghost.srcset = srcsetOf(neighbour.dataset.stem, LIGHTBOX_SIZES);
-      ghost.src = imagePath(variant(neighbour.dataset.stem, 1200));
+      assignLightboxSource(ghost, neighbour.dataset.stem);
       ghost.hidden = false;
     };
     lightbox?.addEventListener("touchstart", event => {
