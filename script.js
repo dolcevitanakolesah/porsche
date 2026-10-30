@@ -293,17 +293,29 @@
       const image = button.querySelector("img");
       return !!image && !image.hidden;
     });
-    const showPhoto = index => {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let slideToken = 0;
+    const setLightboxImage = (stem, alt) => {
+      lightboxImage.sizes = LIGHTBOX_SIZES_ATTR;
+      lightboxImage.srcset = srcsetOf(stem, LIGHTBOX_SIZES); // browser picks 1200 or 1920 for this screen
+      lightboxImage.src = imagePath(variant(stem, 1200));
+      lightboxImage.alt = alt;
+    };
+    // direction: +1 = next (slides in from the right), -1 = previous (from the left), 0 = no animation.
+    const showPhoto = (index, direction = 0) => {
       const photos = visiblePhotos();
       if (!photos.length) return;
       activePhoto = (index + photos.length) % photos.length;
       const button = photos[activePhoto];
       const isVideo = button.dataset.type === "video";
       const image = button.querySelector("img");
+      const token = ++slideToken;
+      const wasShowingImage = !lightboxImage.hidden;
       lightboxVideo.pause();
       lightboxVideo.hidden = !isVideo;
       lightboxImage.hidden = isVideo;
       if (isVideo) {
+        lightboxImage.getAnimations().forEach(animation => animation.cancel());
         const videoSource = button.querySelector("video source");
         lightboxVideoSource.src = videoSource ? videoSource.src : (button.querySelector("video").currentSrc || button.querySelector("video").src);
         lightboxVideo.load();
@@ -313,11 +325,29 @@
         lightboxVideoSource.removeAttribute("src");
         lightboxVideo.load();
         const stem = button.dataset.stem;
-        lightboxImage.sizes = LIGHTBOX_SIZES_ATTR;
-        lightboxImage.srcset = srcsetOf(stem, LIGHTBOX_SIZES); // browser picks 1200 or 1920 for this screen
-        lightboxImage.src = imagePath(variant(stem, 1200));
-        lightboxImage.alt = image.alt;
-        // Warm the cache with the NEXT photo only, so arrow-key browsing feels instant without downloading the whole set.
+        if (direction && wasShowingImage && !reduceMotion.matches && lightboxImage.animate) {
+          // 1) slide the current photo out while 2) the next one downloads and decodes, then 3) slide it in.
+          lightboxImage.hidden = false;
+          const slideOut = lightboxImage.animate(
+            [{ transform: "translateX(0)", opacity: 1 }, { transform: `translateX(${-direction * 30}%)`, opacity: 0 }],
+            { duration: 160, easing: "ease-in", fill: "forwards" });
+          const incoming = new Image();
+          incoming.sizes = LIGHTBOX_SIZES_ATTR;
+          incoming.srcset = srcsetOf(stem, LIGHTBOX_SIZES);
+          incoming.src = imagePath(variant(stem, 1200));
+          Promise.all([slideOut.finished.catch(() => {}), incoming.decode().catch(() => {})]).then(() => {
+            if (token !== slideToken) return; // a newer swipe took over
+            lightboxImage.getAnimations().forEach(animation => animation.cancel());
+            setLightboxImage(stem, image.alt);
+            lightboxImage.animate(
+              [{ transform: `translateX(${direction * 30}%)`, opacity: 0 }, { transform: "translateX(0)", opacity: 1 }],
+              { duration: 220, easing: "ease-out" });
+          });
+        } else {
+          lightboxImage.getAnimations().forEach(animation => animation.cancel());
+          setLightboxImage(stem, image.alt);
+        }
+        // Warm the cache with the NEXT photo only, so browsing feels instant without downloading the whole set.
         const next = photos[(activePhoto + 1) % photos.length];
         if (next && next.dataset.stem && next !== button) {
           const warm = new Image();
@@ -341,8 +371,8 @@
       $(".lightbox-close", lightbox).focus();
     }));
     $(".lightbox-close", lightbox)?.addEventListener("click", closeLightbox);
-    $(".lightbox-prev", lightbox)?.addEventListener("click", () => showPhoto(activePhoto - 1));
-    $(".lightbox-next", lightbox)?.addEventListener("click", () => showPhoto(activePhoto + 1));
+    $(".lightbox-prev", lightbox)?.addEventListener("click", () => showPhoto(activePhoto - 1, -1));
+    $(".lightbox-next", lightbox)?.addEventListener("click", () => showPhoto(activePhoto + 1, 1));
     lightbox?.addEventListener("click", event => { if (event.target === lightbox) closeLightbox(); });
     // Swipe left/right on touch screens to move between photos.
     let touchStart = null;
@@ -357,13 +387,13 @@
       const dy = event.changedTouches[0].clientY - touchStart.y;
       touchStart = null;
       if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return; // too short, or mostly vertical
-      showPhoto(activePhoto + (dx < 0 ? 1 : -1));
+      showPhoto(activePhoto + (dx < 0 ? 1 : -1), dx < 0 ? 1 : -1);
     }, { passive: true });
     document.addEventListener("keydown", event => {
       if (!lightbox || lightbox.hidden) return;
       if (event.key === "Escape") closeLightbox();
-      else if (event.key === "ArrowLeft") showPhoto(activePhoto - 1);
-      else if (event.key === "ArrowRight") showPhoto(activePhoto + 1);
+      else if (event.key === "ArrowLeft") showPhoto(activePhoto - 1, -1);
+      else if (event.key === "ArrowRight") showPhoto(activePhoto + 1, 1);
     });
   }
 
