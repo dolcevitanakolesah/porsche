@@ -344,6 +344,21 @@
     $(".lightbox-prev", lightbox)?.addEventListener("click", () => showPhoto(activePhoto - 1));
     $(".lightbox-next", lightbox)?.addEventListener("click", () => showPhoto(activePhoto + 1));
     lightbox?.addEventListener("click", event => { if (event.target === lightbox) closeLightbox(); });
+    // Swipe left/right on touch screens to move between photos.
+    let touchStart = null;
+    lightbox?.addEventListener("touchstart", event => {
+      // Leave the video's own controls (scrubbing, volume) alone.
+      if (event.touches.length !== 1 || event.target.closest("video")) { touchStart = null; return; }
+      touchStart = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+    }, { passive: true });
+    lightbox?.addEventListener("touchend", event => {
+      if (!touchStart || !event.changedTouches.length) return;
+      const dx = event.changedTouches[0].clientX - touchStart.x;
+      const dy = event.changedTouches[0].clientY - touchStart.y;
+      touchStart = null;
+      if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return; // too short, or mostly vertical
+      showPhoto(activePhoto + (dx < 0 ? 1 : -1));
+    }, { passive: true });
     document.addEventListener("keydown", event => {
       if (!lightbox || lightbox.hidden) return;
       if (event.key === "Escape") closeLightbox();
