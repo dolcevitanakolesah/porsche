@@ -295,6 +295,22 @@
     });
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     let slideToken = 0;
+    // A second <img> that shows the neighbouring photo while the finger drags, so you can see what is coming.
+    const lightboxFigure = $(".lightbox-figure", lightbox);
+    const ghost = document.createElement("img");
+    ghost.className = "lightbox-ghost";
+    ghost.alt = "";
+    ghost.setAttribute("aria-hidden", "true");
+    ghost.decoding = "async";
+    ghost.hidden = true;
+    lightboxFigure.appendChild(ghost);
+    const clearMotion = () => {
+      [lightboxImage, lightboxVideo, ghost].forEach(el => {
+        el.getAnimations().forEach(animation => animation.cancel());
+        el.style.transform = "";
+      });
+      ghost.hidden = true;
+    };
     const setLightboxImage = (stem, alt) => {
       lightboxImage.sizes = LIGHTBOX_SIZES_ATTR;
       lightboxImage.srcset = srcsetOf(stem, LIGHTBOX_SIZES); // browser picks 1200 or 1920 for this screen
@@ -302,7 +318,7 @@
       lightboxImage.alt = alt;
     };
     // direction: +1 = next (slides in from the right), -1 = previous (from the left), 0 = no animation.
-    const showPhoto = (index, direction = 0) => {
+    const showPhoto = (index, direction = 0, onSettled = null) => {
       const photos = visiblePhotos();
       if (!photos.length) return;
       activePhoto = (index + photos.length) % photos.length;
@@ -315,7 +331,7 @@
       lightboxVideo.hidden = !isVideo;
       lightboxImage.hidden = isVideo;
       if (isVideo) {
-        lightboxImage.getAnimations().forEach(animation => animation.cancel());
+        clearMotion();
         const videoSource = button.querySelector("video source");
         lightboxVideoSource.src = videoSource ? videoSource.src : (button.querySelector("video").currentSrc || button.querySelector("video").src);
         lightboxVideo.load();
@@ -337,30 +353,40 @@
           incoming.src = imagePath(variant(stem, 1200));
           Promise.all([slideOut.finished.catch(() => {}), incoming.decode().catch(() => {})]).then(() => {
             if (token !== slideToken) return; // a newer swipe took over
-            lightboxImage.getAnimations().forEach(animation => animation.cancel());
+            clearMotion();
             setLightboxImage(stem, image.alt);
             lightboxImage.animate(
               [{ transform: `translateX(${direction * 30}%)`, opacity: 0 }, { transform: "translateX(0)", opacity: 1 }],
               { duration: 140, easing: "ease-out" });
           });
+        } else if (onSettled) {
+          // Finger-swipe hand-off: the neighbour photo is already on screen (ghost). Load it into the main image,
+          // and only when it is decoded remove the ghost, so there is no flash.
+          setLightboxImage(stem, image.alt);
+          lightboxImage.decode().catch(() => {}).then(() => {
+            if (token === slideToken) clearMotion();
+            onSettled();
+          });
         } else {
-          lightboxImage.getAnimations().forEach(animation => animation.cancel());
+          clearMotion();
           setLightboxImage(stem, image.alt);
         }
-        // Warm the cache with the NEXT photo only, so browsing feels instant without downloading the whole set.
-        const next = photos[(activePhoto + 1) % photos.length];
-        if (next && next.dataset.stem && next !== button) {
-          const warm = new Image();
-          warm.sizes = LIGHTBOX_SIZES_ATTR;
-          warm.srcset = srcsetOf(next.dataset.stem, LIGHTBOX_SIZES);
-          warm.src = imagePath(variant(next.dataset.stem, 1200));
-        }
+        // Warm the cache with the previous and next photo only (not the whole set), so swiping shows them instantly.
+        [1, -1].forEach(step => {
+          const neighbour = photos[(activePhoto + step + photos.length) % photos.length];
+          if (neighbour && neighbour.dataset.stem && neighbour !== button) {
+            const warm = new Image();
+            warm.sizes = LIGHTBOX_SIZES_ATTR;
+            warm.srcset = srcsetOf(neighbour.dataset.stem, LIGHTBOX_SIZES);
+            warm.src = imagePath(variant(neighbour.dataset.stem, 1200));
+          }
+        });
       }
       lightboxCounter.textContent = `${activePhoto + 1} / ${photos.length}`;
       $(".lightbox-prev", lightbox).disabled = photos.length < 2;
       $(".lightbox-next", lightbox).disabled = photos.length < 2;
     };
-    const closeLightbox = () => { lightboxVideo.pause(); lightboxVideoSource.removeAttribute("src"); lightboxVideo.load(); lightbox.hidden = true; document.body.classList.remove("lightbox-open"); };
+    const closeLightbox = () => { clearMotion(); swipeBusy = false; lightboxVideo.pause(); lightboxVideoSource.removeAttribute("src"); lightboxVideo.load(); lightbox.hidden = true; document.body.classList.remove("lightbox-open"); };
     $$(".gallery-photo", root).forEach(button => button.addEventListener("click", () => {
       const photos = visiblePhotos();
       const clicked = photos.indexOf(button);
@@ -374,21 +400,84 @@
     $(".lightbox-prev", lightbox)?.addEventListener("click", () => showPhoto(activePhoto - 1, -1));
     $(".lightbox-next", lightbox)?.addEventListener("click", () => showPhoto(activePhoto + 1, 1));
     lightbox?.addEventListener("click", event => { if (event.target === lightbox) closeLightbox(); });
-    // Swipe left/right on touch screens to move between photos.
-    let touchStart = null;
+    // Finger-following swipe: the photo moves with your finger (both directions, any speed); a neighbour peeks in.
+    // Releasing past ~25% of the width, or with a quick flick, completes the slide; otherwise it springs back.
+    const GAP = 16;
+    let drag = null;
+    let swipeBusy = false;
+    const movingElement = () => (lightboxVideo.hidden ? lightboxImage : lightboxVideo);
+    const showGhost = side => {
+      const photos = visiblePhotos();
+      const neighbour = photos[(activePhoto + side + photos.length) % photos.length];
+      if (photos.length < 2 || !neighbour || neighbour.dataset.type === "video" || !neighbour.dataset.stem) { ghost.hidden = true; return; }
+      ghost.sizes = LIGHTBOX_SIZES_ATTR;
+      ghost.srcset = srcsetOf(neighbour.dataset.stem, LIGHTBOX_SIZES);
+      ghost.src = imagePath(variant(neighbour.dataset.stem, 1200));
+      ghost.hidden = false;
+    };
     lightbox?.addEventListener("touchstart", event => {
       // Leave the video's own controls (scrubbing, volume) alone.
-      if (event.touches.length !== 1 || event.target.closest("video")) { touchStart = null; return; }
-      touchStart = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+      if (swipeBusy || event.touches.length !== 1 || event.target.closest("video")) { drag = null; return; }
+      const touch = event.touches[0];
+      drag = { x0: touch.clientX, y0: touch.clientY, mode: null, dx: 0, side: 0, samples: [{ x: touch.clientX, t: performance.now() }] };
     }, { passive: true });
-    lightbox?.addEventListener("touchend", event => {
-      if (!touchStart || !event.changedTouches.length) return;
-      const dx = event.changedTouches[0].clientX - touchStart.x;
-      const dy = event.changedTouches[0].clientY - touchStart.y;
-      touchStart = null;
-      if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return; // too short, or mostly vertical
-      showPhoto(activePhoto + (dx < 0 ? 1 : -1), dx < 0 ? 1 : -1);
+    lightbox?.addEventListener("touchmove", event => {
+      if (!drag || !event.touches.length) return;
+      const touch = event.touches[0];
+      const dx = touch.clientX - drag.x0;
+      const dy = touch.clientY - drag.y0;
+      if (!drag.mode) {
+        if (Math.max(Math.abs(dx), Math.abs(dy)) < 8) return;
+        if (Math.abs(dy) > Math.abs(dx)) { drag = null; return; } // vertical gesture: not ours
+        drag.mode = "h";
+      }
+      const now = performance.now();
+      drag.samples.push({ x: touch.clientX, t: now });
+      drag.samples = drag.samples.filter(sample => now - sample.t < 100);
+      const count = visiblePhotos().length;
+      drag.dx = count < 2 ? dx * 0.3 : dx; // a single photo just resists
+      const side = dx < 0 ? 1 : -1;
+      if (count > 1 && side !== drag.side) { drag.side = side; showGhost(side); }
+      const width = lightbox.clientWidth;
+      movingElement().style.transform = `translateX(${drag.dx}px)`;
+      if (!ghost.hidden) ghost.style.transform = `translateX(${drag.dx + side * (width + GAP)}px)`;
     }, { passive: true });
+    const endDrag = cancelled => {
+      if (!drag || drag.mode !== "h") { drag = null; return; }
+      const { dx, side, samples } = drag;
+      drag = null;
+      const width = lightbox.clientWidth;
+      const first = samples[0];
+      const last = samples[samples.length - 1];
+      const velocity = last.t > first.t ? (last.x - first.x) / (last.t - first.t) : 0; // px per ms
+      const count = visiblePhotos().length;
+      const direction = dx < 0 ? 1 : -1;
+      const flickedBack = Math.abs(velocity) > 0.4 && Math.sign(velocity) !== Math.sign(dx);
+      const commit = !cancelled && count > 1 && !flickedBack &&
+        (Math.abs(dx) > width * 0.25 || (Math.abs(velocity) > 0.4 && Math.abs(dx) > 24));
+      const el = movingElement();
+      const distance = width + GAP;
+      swipeBusy = true;
+      if (commit) {
+        const speed = Math.max(Math.abs(velocity), 1.2);
+        const duration = reduceMotion.matches ? 0 : Math.min(240, Math.max(100, (distance - Math.abs(dx)) / speed));
+        const options = { duration, easing: "ease-out", fill: "forwards" };
+        const finished = [el.animate([{ transform: `translateX(${dx}px)` }, { transform: `translateX(${-direction * distance}px)` }], options).finished];
+        if (!ghost.hidden) finished.push(ghost.animate([{ transform: `translateX(${dx + direction * distance}px)` }, { transform: "translateX(0)" }], options).finished);
+        Promise.all(finished.map(p => p.catch(() => {}))).then(() => {
+          const settled = () => { swipeBusy = false; };
+          showPhoto(activePhoto + direction, 0, ghost.hidden ? null : settled);
+          if (ghost.hidden) settled();
+        });
+      } else {
+        const options = { duration: reduceMotion.matches ? 0 : 180, easing: "ease-out", fill: "forwards" };
+        const finished = [el.animate([{ transform: `translateX(${dx}px)` }, { transform: "translateX(0)" }], options).finished];
+        if (!ghost.hidden) finished.push(ghost.animate([{ transform: `translateX(${dx + side * distance}px)` }, { transform: `translateX(${side * distance}px)` }], options).finished);
+        Promise.all(finished.map(p => p.catch(() => {}))).then(() => { clearMotion(); swipeBusy = false; });
+      }
+    };
+    lightbox?.addEventListener("touchend", () => endDrag(false), { passive: true });
+    lightbox?.addEventListener("touchcancel", () => endDrag(true), { passive: true });
     document.addEventListener("keydown", event => {
       if (!lightbox || lightbox.hidden) return;
       if (event.key === "Escape") closeLightbox();

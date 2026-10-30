@@ -124,7 +124,10 @@ button { cursor: pointer; }
 .gallery-empty[hidden] { display: none !important; }
 .gallery-lightbox[hidden] { display: none !important; }
 .gallery-lightbox { position: fixed; inset: 0; z-index: 1000; display: grid; grid-template-columns: minmax(48px, 8vw) minmax(0, 1fr) minmax(48px, 8vw); grid-template-rows: minmax(0, 1fr) auto; align-items: center; background: rgba(8,10,9,.96); padding: 54px 18px 28px; }
-.lightbox-figure { grid-column: 2; grid-row: 1; margin: 0; min-width: 0; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.lightbox-figure { grid-column: 2; grid-row: 1; margin: 0; min-width: 0; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); place-items: center; }
+.lightbox-figure > * { grid-area: 1 / 1; }
+.lightbox-ghost { pointer-events: none; will-change: transform; }
+.lightbox-ghost[hidden], #lightbox-image[hidden] { display: none !important; }
 .lightbox-figure img { display: block; max-width: 100%; max-height: calc(100vh - 130px); width: auto; height: auto; object-fit: contain; }
 .lightbox-figure figcaption { color: #e7e8e0; font-size: 12px; text-align: center; margin-top: 12px; }
 .lightbox-close { position: absolute; top: 12px; right: 20px; width: 44px; height: 44px; border: 0; background: transparent; color: white; font-size: 36px; cursor: pointer; }
@@ -134,7 +137,8 @@ button { cursor: pointer; }
 .lightbox-nav:disabled { opacity: .25; cursor: default; }
 .lightbox-counter { grid-column: 1 / 4; grid-row: 2; color: #c7cbc1; text-align: center; font-size: 11px; padding-top: 15px; }
 body.lightbox-open { overflow: hidden; }
-.gallery-lightbox { touch-action: pan-y; overscroll-behavior: contain; }
+.gallery-lightbox { touch-action: pan-y; overscroll-behavior: contain; overflow: hidden; }
+#lightbox-image { will-change: transform; }
 .detail-overview { display: grid; grid-template-columns: 1.2fr .8fr; gap: 70px; padding: 70px 0 55px; border-bottom: 1px solid var(--line); }
 .detail-overview h2, .detail-section h2 { font: 500 30px/1.15 Manrope, sans-serif; letter-spacing: -.045em; margin: 0 0 22px; }
 .detail-description { font: 16px/1.8 var(--serif); color: #4f554d; white-space: pre-line; }
