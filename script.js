@@ -64,31 +64,23 @@
     const label = n => String(n).padStart(2, "0");
     const items = [];
 
-    // Photos: if cars.json gives "photos": N we know the answer instantly, with zero probing.
-    // Otherwise probe 40 thumbnails IN PARALLEL (one round trip, not one per photo) and keep the first unbroken run.
-    let photoCount = Number.isInteger(car.photos) ? car.photos : null;
-    if (photoCount === null) {
-      const hits = await Promise.all(Array.from({ length: 40 }, (_, i) => probeThumb(`${dir}-${label(i + 1)}`)));
-      photoCount = hits.indexOf(false) === -1 ? hits.length : hits.indexOf(false);
-    }
+    // Photos: probe 50 tiny thumbnails IN PARALLEL (one round trip, not one per photo) and keep the first unbroken run.
+    // Add or delete photos in the folder and the gallery updates itself; nothing to edit in cars.json.
+    const hits = await Promise.all(Array.from({ length: 50 }, (_, i) => probeThumb(`${dir}-${label(i + 1)}`)));
+    const photoCount = hits.indexOf(false) === -1 ? hits.length : hits.indexOf(false);
     for (let number = 1; number <= photoCount; number++) {
       const stem = `${dir}-${label(number)}`;
       items.push({ type: "photo", src: variant(stem, 600), stem, alt: `${altBase} — photo ${label(number)}` });
     }
 
-    // Videos: "videos": N in cars.json avoids any probing. If it is absent we fall back to a small parallel check.
-    const videoNumbers = Number.isInteger(car.videos)
-      ? Array.from({ length: car.videos }, (_, i) => i + 1)
-      : Array.from({ length: 10 }, (_, i) => i + 1);
-    const verify = !Number.isInteger(car.videos);
-    const videoChecks = await Promise.all(videoNumbers.map(async number => {
+    // Videos: check up to 5 filenames in parallel; missing ones are simply skipped.
+    const videoChecks = await Promise.all(Array.from({ length: 5 }, async (_, index) => {
+      const number = index + 1;
       const src = `assets/${folder}/${prefix}-video-${label(number)}.mp4`;
-      const item = { type: "video", src, stem: src, alt: `${altBase} — video ${label(number)}` };
-      if (!verify) return { number, item };
       try {
         let response = await fetch(src, { method: "HEAD" });
         if (response.status === 405 || response.status === 501) response = await fetch(src, { headers: { Range: "bytes=0-0" } });
-        if (response.ok || response.status === 206) return { number, item };
+        if (response.ok || response.status === 206) return { number, item: { type: "video", src, stem: src, alt: `${altBase} — video ${label(number)}` } };
       } catch (_) { /* a missing video must not block the others */ }
       return null;
     }));

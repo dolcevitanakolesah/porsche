@@ -14,13 +14,8 @@ Site-wide, in `assets/`:
 
 Example: `964-Creances-01-0300.webp` (300x200, ~15 KB), `-0600` (~40 KB), `-1200` (~75 KB), `-1920` (~150 KB).
 
-# cars.json: add counts (skips all probing)
-
-```json
-{ "folder": "964-Creances", "prefix": "964-Creances", "photos": 14, "videos": 1, ... }
-```
-`photos` = number of numbered photos (01..N). `videos` = number of mp4 files (0 for none).
-Without them the site still works (parallel thumbnail probe), but counts are faster.
+# cars.json
+No change needed. Add or delete photos (up to 50) and videos (up to 5) in the folder and the site finds them automatically.
 
 # Caching
 `_headers` works on Netlify / Cloudflare Pages; `.htaccess` on Apache. GitHub Pages cannot set headers:
