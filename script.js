@@ -20,42 +20,40 @@
   const imagePath = path => path ? `./${String(path).replace(/^\.?\//, "")}` : "";
   const safeArray = value => Array.isArray(value) ? value : [];
 
-  // Gallery convention: Prefix-Main.jpg, Prefix-01.jpg, Prefix-02.jpg, ...
+  // ---- Image strategy: every photo exists as 4 WebP files -------------------
+  //   <prefix>-<NN>-0300.webp  300x200   grid thumbnails (small screens / 1x)
+  //   <prefix>-<NN>-0600.webp  600x400   cards + grid thumbnails (2x screens)
+  //   <prefix>-<NN>-1200.webp  1200x800  lightbox on phones / tablets
+  //   <prefix>-<NN>-1920.webp  1920x1280 lightbox on large screens
+  // The browser picks the right file from srcset/sizes; width/height reserve space.
+  const IMG_W = 1200, IMG_H = 800; // aspect ratio only (3:2); keeps layout from shifting
+  const sizeLabel = size => String(size).padStart(4, "0");
+  const variant = (stem, size) => `${stem}-${sizeLabel(size)}.webp`;
+  const srcsetOf = (stem, sizes) => sizes.map(size => `${imagePath(variant(stem, size))} ${size}w`).join(", ");
+  const CARD_SIZES = [300, 600, 1200];
+  const THUMB_SIZES = [300, 600, 1200];
+  const LIGHTBOX_SIZES = [1200, 1920];
+  const CARD_SIZES_ATTR = "(max-width: 700px) 100vw, (max-width: 1000px) 50vw, 33vw";
+  const THUMB_SIZES_ATTR = "(max-width: 700px) 50vw, (min-width: 1450px) 460px, 33vw";
+  const LIGHTBOX_SIZES_ATTR = "100vw";
+
+  // Gallery convention: Prefix-Main-0600.webp (cover), Prefix-01-0300.webp ... Prefix-01-1920.webp, Prefix-02-..., ...
   // Listing cards use the main image; the detail view discovers only photos that exist.
   function resolveCarImages(entry) {
     const folder = String(entry.folder || "").replace(/^\/+|\/+$/g, "");
     const prefix = String(entry.prefix || folder).replace(/^\/+|\/+$/g, "");
     if (!folder || !prefix) return [];
     const stem = `assets/${folder}/${prefix}-Main`;
-    return [{ src: `${stem}.jpg`, stem, alt: entry.imageAlt || entry.title || "Porsche 911" }];
+    return [{ src: variant(stem, 600), stem, alt: entry.imageAlt || entry.title || "Porsche 911" }];
   }
 
-  function probeImage(stem, alt) {
-    // Probe supported extensions concurrently instead of waiting for each 404 in turn.
-    // This matters on GitHub Pages, where the gallery may contain many numbered photos.
-    const extensions = ["jpg", "jpeg", "webp", "JPG", "JPEG", "WEBP"];
-    return new Promise(resolve => {
-      let remaining = extensions.length;
-      let settled = false;
-      for (const extension of extensions) {
-        const src = `${stem}.${extension}`;
-        const image = new Image();
-        image.onload = () => {
-          if (settled) return;
-          settled = true;
-          resolve({ src, stem, alt });
-        };
-        image.onerror = () => {
-          remaining -= 1;
-          if (!remaining && !settled) {
-            settled = true;
-            resolve(null);
-          }
-        };
-        image.src = src;
-      }
-    });
-  }
+  // Cheap existence check: only ever requests the 15 KB thumbnail, never a full-size file.
+  const probeThumb = stem => new Promise(resolve => {
+    const image = new Image();
+    image.onload = () => resolve(true);
+    image.onerror = () => resolve(false);
+    image.src = variant(stem, 300);
+  });
 
   async function discoverCarGallery(car) {
     const folder = String(car.folder || "").replace(/^\/+|\/+$/g, "");
@@ -63,37 +61,38 @@
     if (!folder || !prefix) return [];
     const dir = `assets/${folder}/${prefix}`;
     const altBase = car.imageAlt || car.title || "Porsche 911";
+    const label = n => String(n).padStart(2, "0");
     const items = [];
-    // -Main is reserved for the collection-card thumbnail. The detail gallery
-    // contains numbered photos first, followed by PREFIX-video-01.mp4, etc.
-    for (let number = 1; number <= 30; number++) {
-      const label = String(number).padStart(2, "0");
-      const photo = await probeImage(`${dir}-${label}`, `${altBase} — photo ${label}`);
-      if (!photo) break;
-      items.push({ ...photo, type: "photo" });
+
+    // Photos: if cars.json gives "photos": N we know the answer instantly, with zero probing.
+    // Otherwise probe 40 thumbnails IN PARALLEL (one round trip, not one per photo) and keep the first unbroken run.
+    let photoCount = Number.isInteger(car.photos) ? car.photos : null;
+    if (photoCount === null) {
+      const hits = await Promise.all(Array.from({ length: 40 }, (_, i) => probeThumb(`${dir}-${label(i + 1)}`)));
+      photoCount = hits.indexOf(false) === -1 ? hits.length : hits.indexOf(false);
     }
-    // Probe video filenames independently (in parallel), after all photos.
-    // Do not stop at the first missing number: repositories may contain gaps,
-    // and some static hosts handle HEAD requests inconsistently. A ranged GET
-    // checks the real asset URL while avoiding a full video download.
-    const videoChecks = await Promise.all(Array.from({ length: 20 }, async (_, index) => {
-      const number = index + 1;
-      const label = String(number).padStart(2, "0");
-      const src = `assets/${folder}/${prefix}-video-${label}.mp4`;
+    for (let number = 1; number <= photoCount; number++) {
+      const stem = `${dir}-${label(number)}`;
+      items.push({ type: "photo", src: variant(stem, 600), stem, alt: `${altBase} — photo ${label(number)}` });
+    }
+
+    // Videos: "videos": N in cars.json avoids any probing. If it is absent we fall back to a small parallel check.
+    const videoNumbers = Number.isInteger(car.videos)
+      ? Array.from({ length: car.videos }, (_, i) => i + 1)
+      : Array.from({ length: 10 }, (_, i) => i + 1);
+    const verify = !Number.isInteger(car.videos);
+    const videoChecks = await Promise.all(videoNumbers.map(async number => {
+      const src = `assets/${folder}/${prefix}-video-${label(number)}.mp4`;
+      const item = { type: "video", src, stem: src, alt: `${altBase} — video ${label(number)}` };
+      if (!verify) return { number, item };
       try {
         let response = await fetch(src, { method: "HEAD" });
-        if (response.status === 405 || response.status === 501) {
-          response = await fetch(src, { headers: { Range: "bytes=0-0" } });
-        }
-        if (response.ok || response.status === 206) {
-          return { number, item: { type: "video", src, stem: src, alt: `${altBase} — video ${label}` } };
-        }
-      } catch (_) { /* A missing video should not prevent other videos loading. */ }
+        if (response.status === 405 || response.status === 501) response = await fetch(src, { headers: { Range: "bytes=0-0" } });
+        if (response.ok || response.status === 206) return { number, item };
+      } catch (_) { /* a missing video must not block the others */ }
       return null;
     }));
-    for (const result of videoChecks.filter(Boolean).sort((a, b) => a.number - b.number)) {
-      items.push(result.item);
-    }
+    for (const result of videoChecks.filter(Boolean).sort((x, y) => x.number - y.number)) items.push(result.item);
     return items;
   }
 
@@ -128,8 +127,7 @@
           description,
           status: "Available for enquiry",
           previous_owners: [],
-          maintenance: [],
-          videos: []
+          maintenance: []
         };
       });
     } catch (error) {
@@ -140,13 +138,11 @@
     }
   }
 
+  // If a WebP is missing, hide its tile / show the "911" placeholder instead of a broken-image icon.
   function attachImageFallbacks(parent = document) {
-    $$('img[data-image-stem]', parent).forEach(img => {
+    $$("img[data-fallback]", parent).forEach(img => {
       if (img.dataset.fallbackBound === "true") return;
       img.dataset.fallbackBound = "true";
-      const stem = img.dataset.imageStem;
-      const extensions = ["jpg", "jpeg", "webp", "JPG", "JPEG", "WEBP"];
-      let index = 1;
       const settle = () => {
         const button = img.closest(".gallery-photo");
         if (button) {
@@ -162,22 +158,21 @@
           if (fallback && fallback.classList.contains("car-image-fallback")) fallback.hidden = false;
         }
       };
-      img.addEventListener("error", function retry() {
-        if (index >= extensions.length) { settle(); return; }
-        img.src = `${stem}.${extensions[index++]}`;
-      });
+      img.addEventListener("error", settle, { once: true });
+      if (img.complete && img.naturalWidth === 0 && img.currentSrc) settle();
     });
   }
 
   function renderCard(car) {
-    const img = imagePath(car.cover || safeArray(car.gallery)[0]?.src);
+    const coverStem = car.gallery && car.gallery[0] ? car.gallery[0].stem : "";
+    const img = coverStem ? imagePath(variant(coverStem, 600)) : "";
     const title = car.title || `Porsche 911 ${car.series || ""}`;
     const year = car.year || "Year not specified";
     const alt = car.cover_alt || `${title} exterior`;
     return `<article class="car-card">
       <a class="car-card-link" href="${escapeHTML(carHref(car))}" aria-label="View ${escapeHTML(title)}">
         <div class="car-image-wrap">
-          ${img ? `<img class="car-image" data-image-stem="${escapeHTML(img.replace(/\.(?:jpg|jpeg|webp)$/i, ""))}" src="${escapeHTML(img)}" alt="${escapeHTML(alt)}" loading="lazy"><div class="car-image-fallback" hidden>911</div>` : `<div class="car-image-fallback">911</div>`}
+          ${img ? `<img class="car-image" data-fallback src="${escapeHTML(img)}" srcset="${escapeHTML(srcsetOf(coverStem, CARD_SIZES))}" sizes="${CARD_SIZES_ATTR}" width="${IMG_W}" height="${IMG_H}" alt="${escapeHTML(alt)}" loading="lazy" decoding="async"><div class="car-image-fallback" hidden>911</div>` : `<div class="car-image-fallback">911</div>`}
           <span class="card-arrow" aria-hidden="true">↗</span>
         </div>
         <div class="car-card-meta">
@@ -234,24 +229,23 @@
     const usableGallery = gallery.length ? gallery : safeArray(car.gallery);
     const galleryMarkup = usableGallery.length ? `
       <div class="gallery-grid" aria-label="Photographs of ${escapeHTML(title)}">
-        ${usableGallery.map((photo, i) => `<button class="gallery-photo${photo.type === "video" ? " gallery-video" : ""}" type="button" data-index="${i}" data-type="${photo.type || "photo"}" aria-label="Open ${photo.type === "video" ? "video" : "photo"} ${i + 1}">
+        ${usableGallery.map((photo, i) => `<button class="gallery-photo${photo.type === "video" ? " gallery-video" : ""}" type="button" data-index="${i}" data-type="${photo.type || "photo"}" data-stem="${photo.type === "video" ? "" : escapeHTML(photo.stem)}" aria-label="Open ${photo.type === "video" ? "video" : "photo"} ${i + 1}">
           ${photo.type === "video"
-            ? `<video muted playsinline preload="metadata" aria-label="${escapeHTML(photo.alt || `${title} video ${i + 1}`)}" style="display:block;width:100%;height:100%;object-fit:cover;pointer-events:none"><source src="${escapeHTML(imagePath(photo.src))}" type="video/mp4"></video><span class="gallery-photo-zoom" aria-hidden="true">▶</span>`
-            : `<img src="${escapeHTML(imagePath(photo.src))}" alt="${escapeHTML(photo.alt || `${title} photo ${i + 1}`)}" loading="${i === 0 ? "eager" : "lazy"}"><span class="gallery-photo-zoom" aria-hidden="true">↗</span>`}
+            ? `<video muted playsinline preload="none" data-lazy-video aria-label="${escapeHTML(photo.alt || `${title} video ${i + 1}`)}" style="display:block;width:100%;height:100%;object-fit:cover;pointer-events:none"><source src="${escapeHTML(imagePath(photo.src))}" type="video/mp4"></video><span class="gallery-photo-zoom" aria-hidden="true">▶</span>`
+            : `<img data-fallback src="${escapeHTML(imagePath(variant(photo.stem, 600)))}" srcset="${escapeHTML(srcsetOf(photo.stem, THUMB_SIZES))}" sizes="${THUMB_SIZES_ATTR}" width="${IMG_W}" height="${IMG_H}" alt="${escapeHTML(photo.alt || `${title} photo ${i + 1}`)}" ${i < 3 ? `loading="eager"${i === 0 ? ' fetchpriority="high"' : ""}` : 'loading="lazy"'} decoding="async"><span class="gallery-photo-zoom" aria-hidden="true">↗</span>`}
         </button>`).join("")}
       </div>
       <div class="gallery-empty" hidden>No photographs found. Check the car's image filenames and folder.</div>
       <div class="gallery-lightbox" id="gallery-lightbox" role="dialog" aria-modal="true" aria-label="Photo gallery" hidden>
         <button class="lightbox-close" type="button" aria-label="Close gallery">×</button>
         <button class="lightbox-nav lightbox-prev" type="button" aria-label="Previous photo">‹</button>
-        <figure class="lightbox-figure"><img id="lightbox-image" src="" alt=""><video id="lightbox-video" controls playsinline preload="metadata" hidden style="max-width:100%;max-height:calc(100vh - 130px);width:auto;height:auto;background:#000"><source id="lightbox-video-source" type="video/mp4"></video><figcaption id="lightbox-caption"></figcaption></figure>
+        <figure class="lightbox-figure"><img id="lightbox-image" src="" alt="" decoding="async"><video id="lightbox-video" controls playsinline preload="metadata" hidden style="max-width:100%;max-height:calc(100vh - 130px);width:auto;height:auto;background:#000"><source id="lightbox-video-source" type="video/mp4"></video><figcaption id="lightbox-caption"></figcaption></figure>
         <button class="lightbox-nav lightbox-next" type="button" aria-label="Next photo">›</button>
         <div class="lightbox-counter" id="lightbox-counter"></div>
       </div>` : `<div class="gallery-empty">Add photos to this car's folder in assets/</div>`;
     const maintenance = safeArray(car.maintenance);
     const owners = safeArray(car.previous_owners);
     const history = car.history || "No separate history details supplied.";
-    const videos = safeArray(car.videos);
     return `<div class="detail-page">
       <div class="detail-topbar"><a class="wordmark" href="./index.html"><span class="wordmark-mark">911</span><span class="wordmark-copy">ARCHIVE<span>CURATED PORSCHE</span></span></a><a class="back-link" href="./index.html"><span>←</span> Back to collection</a></div>
       <main class="detail-container">
@@ -282,6 +276,18 @@
     }
     car.gallery = await discoverCarGallery(car);
     root.innerHTML = detailTemplate(car);
+    attachImageFallbacks(root);
+    // Videos: fetch metadata (first frame) only when a tile is about to scroll into view.
+    const videos = $$("video[data-lazy-video]", root);
+    if (videos.length) {
+      const wake = video => { video.preload = "metadata"; video.load(); };
+      if ("IntersectionObserver" in window) {
+        const observer = new IntersectionObserver(entries => entries.forEach(entry => {
+          if (entry.isIntersecting) { wake(entry.target); observer.unobserve(entry.target); }
+        }), { rootMargin: "300px" });
+        videos.forEach(video => observer.observe(video));
+      } else videos.forEach(wake);
+    }
     const lightbox = $("#gallery-lightbox");
     const lightboxImage = $("#lightbox-image");
     const lightboxVideo = $("#lightbox-video");
@@ -292,8 +298,9 @@
     const visiblePhotos = () => $$(".gallery-photo", root).filter(button => {
       if (button.hidden) return false;
       if (button.dataset.type === "video") return true;
+      // Lazy-loaded tiles are not "complete" yet; only tiles whose file failed are hidden by the fallback handler.
       const image = button.querySelector("img");
-      return image && !image.hidden && image.complete && image.naturalWidth > 0;
+      return !!image && !image.hidden;
     });
     const showPhoto = index => {
       const photos = visiblePhotos();
@@ -315,9 +322,20 @@
       } else {
         lightboxVideoSource.removeAttribute("src");
         lightboxVideo.load();
-        lightboxImage.src = image.currentSrc || image.src;
+        const stem = button.dataset.stem;
+        lightboxImage.sizes = LIGHTBOX_SIZES_ATTR;
+        lightboxImage.srcset = srcsetOf(stem, LIGHTBOX_SIZES); // browser picks 1200 or 1920 for this screen
+        lightboxImage.src = imagePath(variant(stem, 1200));
         lightboxImage.alt = image.alt;
         lightboxCaption.textContent = image.alt;
+        // Warm the cache with the NEXT photo only, so arrow-key browsing feels instant without downloading the whole set.
+        const next = photos[(activePhoto + 1) % photos.length];
+        if (next && next.dataset.stem && next !== button) {
+          const warm = new Image();
+          warm.sizes = LIGHTBOX_SIZES_ATTR;
+          warm.srcset = srcsetOf(next.dataset.stem, LIGHTBOX_SIZES);
+          warm.src = imagePath(variant(next.dataset.stem, 1200));
+        }
       }
       lightboxCounter.textContent = `${activePhoto + 1} / ${photos.length}`;
       $(".lightbox-prev", lightbox).disabled = photos.length < 2;

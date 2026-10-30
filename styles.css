@@ -23,7 +23,8 @@ button { cursor: pointer; }
 .menu-toggle { display: none; border: 0; background: none; color: white; font-size: 23px; }
 .hero { min-height: 650px; height: min(76vh, 790px); background: #252a27; position: relative; overflow: hidden; color: white; display: flex; align-items: center; }
 .hero-image, .hero-shade { position: absolute; inset: 0; }
-.hero-image { background: url("./assets/hero.jpg") center 55% / cover no-repeat; transform: scale(1.015); }
+.hero-image { transform: scale(1.015); overflow: hidden; }
+.hero-image img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 55%; }
 .hero-shade { background: linear-gradient(90deg, rgba(9,13,11,.83) 0%, rgba(9,13,11,.55) 43%, rgba(9,13,11,.05) 100%), linear-gradient(0deg, rgba(9,13,11,.5), transparent 40%); }
 .hero-content { position: relative; z-index: 1; width: min(760px, 85%); margin-left: 10.5%; padding: 70px 0 90px; }
 .eyebrow { display: flex; align-items: center; gap: 11px; text-transform: uppercase; letter-spacing: .19em; font-size: 9px; font-weight: 700; }
@@ -82,7 +83,8 @@ button { cursor: pointer; }
 .button-dark:hover { background: #30362f; }
 .empty-state .button { margin-top: 15px; }
 .manifesto { display: grid; grid-template-columns: 1fr 1fr; min-height: 500px; background: #171b18; color: white; }
-.manifesto-image { background: url("./assets/manifesto.jpg") center / cover no-repeat; min-height: 420px; }
+.manifesto-image { position: relative; overflow: hidden; background: #252a27; min-height: 420px; }
+.manifesto-image img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; }
 .manifesto-copy { padding: 80px clamp(35px, 7vw, 110px); align-self: center; }
 .manifesto h2 { font-size: clamp(43px, 5.4vw, 68px); margin: 24px 0; }
 .manifesto-copy > p:not(.eyebrow) { max-width: 420px; font-size: 12px; line-height: 1.9; color: #b9beb7; margin: 0 0 30px; }
@@ -114,7 +116,7 @@ button { cursor: pointer; }
 .gallery-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .gallery-photo { display: block; position: relative; width: 100%; aspect-ratio: 3 / 2; padding: 0; border: 0; overflow: hidden; background: #ddd; cursor: zoom-in; }
 .gallery-photo[hidden] { display: none !important; }
-.gallery-photo img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .25s; }
+.gallery-photo img { display: block; background: #ddd; width: 100%; height: 100%; object-fit: cover; transition: transform .25s; }
 .gallery-photo:hover img { transform: scale(1.035); }
 .gallery-photo-zoom { position: absolute; right: 10px; bottom: 10px; display: grid; place-items: center; width: 30px; height: 30px; background: rgba(16,19,17,.78); color: #fff; font-size: 16px; opacity: 0; transition: opacity .2s; }
 .gallery-photo:hover .gallery-photo-zoom, .gallery-photo:focus-visible .gallery-photo-zoom { opacity: 1; }
@@ -166,7 +168,7 @@ body.lightbox-open { overflow: hidden; }
   .header-nav.open { display: flex; }
   .nav-contact { align-self: flex-start; }
   .hero { min-height: 610px; height: 78vh; }
-  .hero-image { background-position: 61% center; }
+  .hero-image img { object-position: 61% center; }
   .hero-content { margin-left: 7%; width: 86%; }
   .hero h1 { font-size: clamp(49px, 13vw, 74px); }
   .hero-note { left: 7%; right: auto; bottom: 22px; flex-direction: column; gap: 6px; }
@@ -208,3 +210,6 @@ body.lightbox-open { overflow: hidden; }
   .detail-cta { padding: 25px; align-items: flex-start; flex-direction: column; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
+
+/* Skip rendering work for below-the-fold sections until they approach the viewport */
+.manifesto, .shipping-band, .site-footer { content-visibility: auto; contain-intrinsic-size: auto 500px; }
