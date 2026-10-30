@@ -231,7 +231,7 @@
       <div class="gallery-lightbox" id="gallery-lightbox" role="dialog" aria-modal="true" aria-label="Photo gallery" hidden>
         <button class="lightbox-close" type="button" aria-label="Close gallery">×</button>
         <button class="lightbox-nav lightbox-prev" type="button" aria-label="Previous photo">‹</button>
-        <figure class="lightbox-figure"><img id="lightbox-image" src="" alt="" decoding="async"><video id="lightbox-video" controls playsinline preload="metadata" hidden style="max-width:100%;max-height:calc(100vh - 130px);width:auto;height:auto;background:#000"><source id="lightbox-video-source" type="video/mp4"></video><figcaption id="lightbox-caption"></figcaption></figure>
+        <figure class="lightbox-figure"><img id="lightbox-image" src="" alt="" decoding="async"><video id="lightbox-video" controls playsinline preload="metadata" hidden style="max-width:100%;max-height:calc(100vh - 130px);width:auto;height:auto;background:#000"><source id="lightbox-video-source" type="video/mp4"></video></figure>
         <button class="lightbox-nav lightbox-next" type="button" aria-label="Next photo">›</button>
         <div class="lightbox-counter" id="lightbox-counter"></div>
       </div>` : `<div class="gallery-empty">Add photos to this car's folder in assets/</div>`;
@@ -284,7 +284,6 @@
     const lightboxImage = $("#lightbox-image");
     const lightboxVideo = $("#lightbox-video");
     const lightboxVideoSource = $("#lightbox-video-source");
-    const lightboxCaption = $("#lightbox-caption");
     const lightboxCounter = $("#lightbox-counter");
     let activePhoto = 0;
     const visiblePhotos = () => $$(".gallery-photo", root).filter(button => {
@@ -310,7 +309,6 @@
         lightboxVideo.load();
         lightboxVideo.currentTime = 0;
         lightboxVideo.play().catch(() => {});
-        lightboxCaption.textContent = button.querySelector("video").getAttribute("aria-label") || `Video ${activePhoto + 1}`;
       } else {
         lightboxVideoSource.removeAttribute("src");
         lightboxVideo.load();
@@ -319,7 +317,6 @@
         lightboxImage.srcset = srcsetOf(stem, LIGHTBOX_SIZES); // browser picks 1200 or 1920 for this screen
         lightboxImage.src = imagePath(variant(stem, 1200));
         lightboxImage.alt = image.alt;
-        lightboxCaption.textContent = image.alt;
         // Warm the cache with the NEXT photo only, so arrow-key browsing feels instant without downloading the whole set.
         const next = photos[(activePhoto + 1) % photos.length];
         if (next && next.dataset.stem && next !== button) {
