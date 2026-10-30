@@ -330,7 +330,7 @@
           lightboxImage.hidden = false;
           const slideOut = lightboxImage.animate(
             [{ transform: "translateX(0)", opacity: 1 }, { transform: `translateX(${-direction * 30}%)`, opacity: 0 }],
-            { duration: 160, easing: "ease-in", fill: "forwards" });
+            { duration: 100, easing: "ease-in", fill: "forwards" });
           const incoming = new Image();
           incoming.sizes = LIGHTBOX_SIZES_ATTR;
           incoming.srcset = srcsetOf(stem, LIGHTBOX_SIZES);
@@ -341,7 +341,7 @@
             setLightboxImage(stem, image.alt);
             lightboxImage.animate(
               [{ transform: `translateX(${direction * 30}%)`, opacity: 0 }, { transform: "translateX(0)", opacity: 1 }],
-              { duration: 220, easing: "ease-out" });
+              { duration: 140, easing: "ease-out" });
           });
         } else {
           lightboxImage.getAnimations().forEach(animation => animation.cancel());
