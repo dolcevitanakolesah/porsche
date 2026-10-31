@@ -235,7 +235,7 @@
     const maintenance = safeArray(car.maintenance);
     const hasText = value => (Array.isArray(value) ? value : [value]).some(item => String(item || "").trim());
     const historyBlock = (hasText(car.history) || car.vin || car.service_book)
-      ? `<div class="history-block"><h3>Vehicle history</h3>${hasText(car.history) ? `<p>${formatDescription(car.history)}</p>` : ""}${car.vin ? `<p><strong>VIN / chassis:</strong> ${escapeHTML(car.vin)}</p>` : ""}${car.service_book ? `<p><strong>Documentation:</strong> ${escapeHTML(car.service_book)}</p>` : ""}</div>`
+      ? `<div class="history-block">${hasText(car.history) ? `<p>${formatDescription(car.history)}</p>` : ""}${car.vin ? `<p><strong>VIN / chassis:</strong> ${escapeHTML(car.vin)}</p>` : ""}${car.service_book ? `<p><strong>Documentation:</strong> ${escapeHTML(car.service_book)}</p>` : ""}</div>`
       : "";
     // The history section appears only if there is something to show.
     const historySection = historyBlock
