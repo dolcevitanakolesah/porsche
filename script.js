@@ -234,17 +234,13 @@
         <div class="lightbox-counter" id="lightbox-counter"></div>
       </div>` : `<div class="gallery-empty">Add photos to this car's folder in assets/</div>`;
     const maintenance = safeArray(car.maintenance);
-    const owners = safeArray(car.previous_owners).filter(owner => (typeof owner === "string" ? owner.trim() : owner));
     const hasText = value => (Array.isArray(value) ? value : [value]).some(item => String(item || "").trim());
     const historyBlock = (hasText(car.history) || car.vin || car.service_book)
       ? `<div class="history-block"><h3>Vehicle history</h3>${hasText(car.history) ? `<p>${formatDescription(car.history)}</p>` : ""}${car.vin ? `<p><strong>VIN / chassis:</strong> ${escapeHTML(car.vin)}</p>` : ""}${car.service_book ? `<p><strong>Documentation:</strong> ${escapeHTML(car.service_book)}</p>` : ""}</div>`
       : "";
-    const ownersBlock = owners.length
-      ? `<div class="history-block"><h3>Previous ownership</h3><ul>${owners.map(owner => `<li>${escapeHTML(typeof owner === "string" ? owner : [owner.period, owner.detail].filter(Boolean).join(" — "))}</li>`).join("")}</ul></div>`
-      : "";
-    // Each block appears only if it has content; if both are empty the whole section disappears.
-    const historySection = (historyBlock || ownersBlock)
-      ? `<section class="detail-section"><p class="eyebrow dark-eyebrow">The story</p><h2>History & provenance</h2><div class="history-grid">${historyBlock}${ownersBlock}</div></section>`
+    // The history section appears only if there is something to show.
+    const historySection = historyBlock
+      ? `<section class="detail-section"><p class="eyebrow dark-eyebrow">The story</p><h2>History & provenance</h2><div class="history-grid">${historyBlock}</div></section>`
       : "";
     return `<div class="detail-page">
       <div class="detail-topbar"><a class="wordmark" href="./index.html"><span class="wordmark-mark">911</span><span class="wordmark-copy">НАСЛЕДИЕ</span></a><a class="back-link" href="./index.html"><span>←</span> Back to collection</a></div>
