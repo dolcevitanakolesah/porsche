@@ -261,14 +261,18 @@
     </div>`;
   }
 
+  const revealDetail = () => document.documentElement.classList.remove("is-detail");
+
   async function initDetail(cars, id) {
     const car = cars.find(item => String(item.id) === id);
     if (!car) {
       root.innerHTML = `<div class="detail-not-found"><p class="eyebrow dark-eyebrow">404 / Car not found</p><h1>This 911 isn't in the collection.</h1><p>It may have been removed or the link may be incorrect.</p><a class="button button-dark" href="./index.html">Return to collection</a></div>`;
+      revealDetail();
       return;
     }
     car.gallery = await discoverCarGallery(car);
     root.innerHTML = detailTemplate(car);
+    revealDetail();
     attachImageFallbacks(root);
     // Videos: fetch metadata (first frame) only when a tile is about to scroll into view.
     const videos = $$("video[data-lazy-video]", root);

@@ -233,3 +233,6 @@ body.lightbox-open { overflow: hidden; }
   .lightbox-nav { display: none; }
   .gallery-lightbox { grid-template-columns: 0 minmax(0, 1fr) 0; padding-left: 0; padding-right: 0; }
 }
+
+/* While a car page is loading, show nothing instead of flashing the home page */
+html.is-detail body > * { display: none !important; }

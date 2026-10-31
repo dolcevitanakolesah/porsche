@@ -13,9 +13,27 @@
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;700;800&display=swap"></noscript>
   <link rel="stylesheet" href="./styles.css">
   <!-- Start the two things the page depends on as early as possible -->
-  <link rel="preload" as="image" href="./assets/Home/Hero-01-1200.webp" imagesrcset="./assets/Home/Hero-01-0300.webp 300w, ./assets/Home/Hero-01-0600.webp 600w, ./assets/Home/Hero-01-1200.webp 1200w, ./assets/Home/Hero-01-1920.webp 1920w" imagesizes="100vw" fetchpriority="high">
+  <script>
+    /* Car pages are index.html?car=...  Hide the home-page markup until the car page is drawn (no flash of the hero),
+       and only preload the hero image / quotes on the home page. */
+    (function () {
+      var root = document.documentElement;
+      if (/[?&]car=/.test(location.search)) {
+        root.classList.add("is-detail");
+        setTimeout(function () { root.classList.remove("is-detail"); }, 6000); /* safety net */
+      } else {
+        var hero = document.createElement("link");
+        hero.rel = "preload"; hero.as = "image"; hero.href = "./assets/Home/Hero-01-1200.webp";
+        hero.setAttribute("imagesrcset", "./assets/Home/Hero-01-0300.webp 300w, ./assets/Home/Hero-01-0600.webp 600w, ./assets/Home/Hero-01-1200.webp 1200w, ./assets/Home/Hero-01-1920.webp 1920w");
+        hero.setAttribute("imagesizes", "100vw"); hero.setAttribute("fetchpriority", "high");
+        document.head.appendChild(hero);
+        var quotes = document.createElement("link");
+        quotes.rel = "preload"; quotes.as = "fetch"; quotes.href = "./quotes.json"; quotes.crossOrigin = "anonymous";
+        document.head.appendChild(quotes);
+      }
+    })();
+  </script>
   <link rel="preload" as="fetch" href="./cars.json" crossorigin="anonymous">
-  <link rel="preload" as="fetch" href="./quotes.json" crossorigin="anonymous">
   <script src="./script.js" defer></script>
 </head>
 <body>
