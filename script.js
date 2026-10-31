@@ -117,9 +117,7 @@
           cover_alt: entry.imageAlt || `${title} exterior`,
           gallery: photos,
           description,
-          status: "Available for enquiry",
-          previous_owners: [],
-          maintenance: []
+          status: "Available for enquiry"
         };
       });
     } catch (error) {
@@ -236,8 +234,18 @@
         <div class="lightbox-counter" id="lightbox-counter"></div>
       </div>` : `<div class="gallery-empty">Add photos to this car's folder in assets/</div>`;
     const maintenance = safeArray(car.maintenance);
-    const owners = safeArray(car.previous_owners);
-    const history = car.history || "No separate history details supplied.";
+    const owners = safeArray(car.previous_owners).filter(owner => (typeof owner === "string" ? owner.trim() : owner));
+    const hasText = value => (Array.isArray(value) ? value : [value]).some(item => String(item || "").trim());
+    const historyBlock = (hasText(car.history) || car.vin || car.service_book)
+      ? `<div class="history-block"><h3>Vehicle history</h3>${hasText(car.history) ? `<p>${formatDescription(car.history)}</p>` : ""}${car.vin ? `<p><strong>VIN / chassis:</strong> ${escapeHTML(car.vin)}</p>` : ""}${car.service_book ? `<p><strong>Documentation:</strong> ${escapeHTML(car.service_book)}</p>` : ""}</div>`
+      : "";
+    const ownersBlock = owners.length
+      ? `<div class="history-block"><h3>Previous ownership</h3><ul>${owners.map(owner => `<li>${escapeHTML(typeof owner === "string" ? owner : [owner.period, owner.detail].filter(Boolean).join(" — "))}</li>`).join("")}</ul></div>`
+      : "";
+    // Each block appears only if it has content; if both are empty the whole section disappears.
+    const historySection = (historyBlock || ownersBlock)
+      ? `<section class="detail-section"><p class="eyebrow dark-eyebrow">The story</p><h2>History & provenance</h2><div class="history-grid">${historyBlock}${ownersBlock}</div></section>`
+      : "";
     return `<div class="detail-page">
       <div class="detail-topbar"><a class="wordmark" href="./index.html"><span class="wordmark-mark">911</span><span class="wordmark-copy">НАСЛЕДИЕ</span></a><a class="back-link" href="./index.html"><span>←</span> Back to collection</a></div>
       <main class="detail-container">
@@ -247,10 +255,7 @@
         <section class="detail-overview"><div><p class="eyebrow dark-eyebrow">The car</p><h2>A closer look.</h2><div class="detail-description">${formatDescription(car.description || "A full description for this example will be added shortly.")}</div></div>
           <div class="detail-facts">${facts.map(([label,value])=>`<div class="fact"><span>${escapeHTML(label)}</span><strong>${escapeHTML(value)}</strong></div>`).join("")}</div>
         </section>
-        <section class="detail-section"><p class="eyebrow dark-eyebrow">The story</p><h2>History & provenance</h2><div class="history-grid">
-          <div class="history-block"><h3>Vehicle history</h3><p>${escapeHTML(history)}</p>${car.vin ? `<p><strong>VIN / chassis:</strong> ${escapeHTML(car.vin)}</p>` : ""}${car.service_book ? `<p><strong>Documentation:</strong> ${escapeHTML(car.service_book)}</p>` : ""}</div>
-          <div class="history-block"><h3>Previous ownership</h3>${owners.length ? `<ul>${owners.map(owner=>`<li>${escapeHTML(typeof owner === "string" ? owner : [owner.period,owner.detail].filter(Boolean).join(" — "))}</li>`).join("")}</ul>` : "<p>No previous-owner details supplied.</p>"}</div>
-        </div></section>
+        ${historySection}
         <section class="detail-section"><p class="eyebrow dark-eyebrow">Care & maintenance</p><h2>Work performed.</h2><p class="section-lead">Maintenance entries should be supported by invoices or service records where available.</p>
           ${maintenance.length ? `<div class="history-grid">${maintenance.map(item=>`<div class="history-block"><h3>${escapeHTML(item.date || "Service record")}</h3><p>${escapeHTML(item.description || item)}</p>${item.provider ? `<p><strong>Provider:</strong> ${escapeHTML(item.provider)}</p>` : ""}</div>`).join("")}</div>` : `<p class="detail-description">No maintenance records supplied.</p>`}
         </section>
