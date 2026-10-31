@@ -239,7 +239,7 @@
     const owners = safeArray(car.previous_owners);
     const history = car.history || "No separate history details supplied.";
     return `<div class="detail-page">
-      <div class="detail-topbar"><a class="wordmark" href="./index.html"><span class="wordmark-mark">911</span><span class="wordmark-copy">ARCHIVE<span>CURATED PORSCHE</span></span></a><a class="back-link" href="./index.html"><span>←</span> Back to collection</a></div>
+      <div class="detail-topbar"><a class="wordmark" href="./index.html"><span class="wordmark-mark">911</span><span class="wordmark-copy">НАСЛЕДИЕ</span></a><a class="back-link" href="./index.html"><span>←</span> Back to collection</a></div>
       <main class="detail-container">
         <p class="detail-kicker">${escapeHTML(car.year || "")} &nbsp; / &nbsp; Porsche 911 ${escapeHTML(car.series || "")}</p>
         <div class="detail-title-row"><h1>${escapeHTML(title)}<span>.</span></h1><div class="detail-price">${escapeHTML(formatPrice(car))}<small>${escapeHTML(car.status || "Available for enquiry")}</small></div></div>
@@ -254,9 +254,9 @@
         <section class="detail-section"><p class="eyebrow dark-eyebrow">Care & maintenance</p><h2>Work performed.</h2><p class="section-lead">Maintenance entries should be supported by invoices or service records where available.</p>
           ${maintenance.length ? `<div class="history-grid">${maintenance.map(item=>`<div class="history-block"><h3>${escapeHTML(item.date || "Service record")}</h3><p>${escapeHTML(item.description || item)}</p>${item.provider ? `<p><strong>Provider:</strong> ${escapeHTML(item.provider)}</p>` : ""}</div>`).join("")}</div>` : `<p class="detail-description">No maintenance records supplied.</p>`}
         </section>
-        <section class="detail-cta"><div><h2>Interested in this 911?</h2><p>Request the full vehicle file, additional photographs or a delivery quote.</p></div><a class="button button-dark" href="mailto:${encodeURIComponent(car.contact_email || "hello@example.com")}?subject=${encodeURIComponent("Enquiry: " + title)}">Enquire about this car ↗</a></section>
+        <section class="detail-cta"><div><h2>Interested in this 911?</h2><p>Request the full vehicle file, additional photographs or a delivery quote.</p></div></section>
       </main>
-      <footer class="site-footer"><a class="wordmark footer-wordmark" href="./index.html"><span class="wordmark-mark">911</span><span class="wordmark-copy">ARCHIVE<span>CURATED PORSCHE</span></span></a><div class="footer-bottom"><span>© ${new Date().getFullYear()} 911 Archive</span><span>Independent collection. Not affiliated with Porsche AG.</span><a href="mailto:hello@example.com">Contact ↗</a></div></footer>
+      <footer class="site-footer"><a class="wordmark footer-wordmark" href="./index.html"><span class="wordmark-mark">911</span><span class="wordmark-copy">НАСЛЕДИЕ</span></a><div class="footer-bottom"><span>© ${new Date().getFullYear()} 911 Archive</span><span>Independent collection. Not affiliated with Porsche AG.</span></div></footer>
     </div>`;
   }
 
