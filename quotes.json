@@ -1,0 +1,11 @@
+{
+  "_help": "intervalSeconds = how long each quote stays on screen. Each quote is a list of lines.",
+  "intervalSeconds": 5,
+  "quotes": [
+    [
+      "Вечная дилемма владельца Porsche:",
+      "Ездить и получать удовольствие",
+      "или беречь пробег?"
+    ]
+  ]
+}

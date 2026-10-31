@@ -502,9 +502,38 @@
     });
   }
 
+  // Rotating quotes in the hero. Text and timing come from quotes.json (intervalSeconds + a list of quotes).
+  async function initQuotes() {
+    const box = $(".hero-intro");
+    if (!box) return;
+    let config;
+    try {
+      const response = await fetch("quotes.json");
+      if (!response.ok) return;
+      config = await response.json();
+    } catch (_) { return; } // keep the quote already in the page
+    const quotes = safeArray(config.quotes).filter(q => Array.isArray(q) && q.length);
+    if (quotes.length < 1) return;
+    const seconds = Number(config.intervalSeconds) > 0 ? Number(config.intervalSeconds) : 5;
+    const render = quote => { box.innerHTML = quote.map(line => escapeHTML(String(line))).join("<br>"); };
+    let index = 0;
+    render(quotes[0]);
+    if (quotes.length < 2) return;
+    const fade = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    box.style.transition = fade ? "opacity .45s ease" : "";
+    setInterval(() => {
+      if (document.hidden) return;
+      index = (index + 1) % quotes.length;
+      if (!fade) { render(quotes[index]); return; }
+      box.style.opacity = "0";
+      setTimeout(() => { render(quotes[index]); box.style.opacity = "1"; }, 450);
+    }, seconds * 1000);
+  }
+
   async function boot() {
     const params = new URLSearchParams(window.location.search);
     const carId = params.get("car");
+    if (!carId) initQuotes();
     const cars = await loadCars();
     if (carId) {
       document.title = `${cars.find(car => String(car.id) === carId)?.title || "Porsche 911"} — 911 Archive`;
