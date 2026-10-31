@@ -116,8 +116,7 @@
           cover: photos[0]?.src || "",
           cover_alt: entry.imageAlt || `${title} exterior`,
           gallery: photos,
-          description,
-          status: "Available for enquiry"
+          description
         };
       });
     } catch (error) {
@@ -246,7 +245,7 @@
       <div class="detail-topbar"><a class="wordmark" href="./index.html"><span class="wordmark-mark">911</span><span class="wordmark-copy">НАСЛЕДИЕ</span></a><a class="back-link" href="./index.html"><span>←</span> Back to collection</a></div>
       <main class="detail-container">
         <p class="detail-kicker">${escapeHTML(car.year || "")} &nbsp; / &nbsp; Porsche 911 ${escapeHTML(car.series || "")}</p>
-        <div class="detail-title-row"><h1>${escapeHTML(title)}<span>.</span></h1><div class="detail-price">${escapeHTML(formatPrice(car))}<small>${escapeHTML(car.status || "Available for enquiry")}</small></div></div>
+        <div class="detail-title-row"><h1>${escapeHTML(title)}<span>.</span></h1><div class="detail-price">${escapeHTML(formatPrice(car))}</div></div>
         ${galleryMarkup}
         <section class="detail-overview"><div><h2>A closer look.</h2><div class="detail-description">${formatDescription(car.description || "A full description for this example will be added shortly.")}</div></div>
           <div class="detail-facts">${facts.map(([label,value])=>`<div class="fact"><span>${escapeHTML(label)}</span><strong>${escapeHTML(value)}</strong></div>`).join("")}</div>
