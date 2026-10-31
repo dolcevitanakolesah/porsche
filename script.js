@@ -238,7 +238,7 @@
       : "";
     // The history section appears only if there is something to show.
     const historySection = historyBlock
-      ? `<section class="detail-section"><h2>History & provenance</h2><div class="history-grid">${historyBlock}</div></section>`
+      ? `<section class="detail-section"><h2>History</h2><div class="history-grid">${historyBlock}</div></section>`
       : "";
     return `<div class="detail-page">
       <div class="detail-topbar"><a class="wordmark" href="./index.html"><span class="wordmark-mark">911</span><span class="wordmark-copy">НАСЛЕДИЕ</span></a><a class="back-link" href="./index.html"><span>←</span> Back to collection</a></div>
@@ -246,7 +246,7 @@
         <p class="detail-kicker">${escapeHTML(car.year || "")} &nbsp; / &nbsp; Porsche 911 ${escapeHTML(car.series || "")}</p>
         <div class="detail-title-row"><h1>${escapeHTML(title)}<span>.</span></h1><div class="detail-price">${escapeHTML(formatPrice(car))}</div></div>
         ${galleryMarkup}
-        <section class="detail-overview"><div><h2>A closer look.</h2><div class="detail-description">${formatDescription(car.description || "A full description for this example will be added shortly.")}</div></div>
+        <section class="detail-overview"><div><h2>A closer look</h2><div class="detail-description">${formatDescription(car.description || "A full description for this example will be added shortly.")}</div></div>
           <div class="detail-facts">${facts.map(([label,value])=>`<div class="fact"><span>${escapeHTML(label)}</span><strong>${escapeHTML(value)}</strong></div>`).join("")}</div>
         </section>
         ${historySection}
