@@ -502,19 +502,20 @@
     });
   }
 
+  // quotes.json holds the quotes and the timing settings; it is fetched once and shared.
+  let settingsPromise = null;
+  const getSettings = () => settingsPromise || (settingsPromise = fetch("quotes.json")
+    .then(response => (response.ok ? response.json() : {}))
+    .catch(() => ({})));
+
   // Rotating quotes in the hero. Text and timing come from quotes.json (intervalSeconds + a list of quotes).
   async function initQuotes() {
     const box = $(".hero-intro");
     if (!box) return;
-    let config;
-    try {
-      const response = await fetch("quotes.json");
-      if (!response.ok) return;
-      config = await response.json();
-    } catch (_) { return; } // keep the quote already in the page
+    const config = await getSettings();
     const quotes = safeArray(config.quotes).filter(q => Array.isArray(q) && q.length);
     if (quotes.length < 1) return;
-    const seconds = Number(config.intervalSeconds) > 0 ? Number(config.intervalSeconds) : 5;
+    const seconds = Number(config.quoteIntervalSeconds) > 0 ? Number(config.quoteIntervalSeconds) : 5;
     const render = quote => { box.innerHTML = quote.map(line => escapeHTML(String(line))).join("<br>"); };
     let index = 0;
     render(quotes[0]);
@@ -531,19 +532,15 @@
   }
 
   // Hero slideshow. Finds assets/Home/Hero-01, Hero-02, ... automatically (stops at the first missing number).
-  // How long each image stays is set in hero.json (intervalSeconds).
+  // Timing (heroIntervalSeconds, heroTransitionSeconds) is set in quotes.json.
   async function initHeroSlideshow() {
     const wrap = $(".hero-image");
     const first = wrap && $("img", wrap);
     if (!first) return;
-    let seconds = 8;
-    try {
-      const response = await fetch("hero.json");
-      if (response.ok) {
-        const config = await response.json();
-        if (Number(config.intervalSeconds) > 0) seconds = Number(config.intervalSeconds);
-      }
-    } catch (_) { /* keep the default */ }
+    const config = await getSettings();
+    const seconds = Number(config.heroIntervalSeconds) > 0 ? Number(config.heroIntervalSeconds) : 8;
+    const fadeSeconds = Number(config.heroTransitionSeconds) >= 0 ? Number(config.heroTransitionSeconds) : 1.2;
+    wrap.style.setProperty("--hero-fade", `${fadeSeconds}s`);
     // Wait until the first image and the page are done, so looking for more images never slows the first paint.
     if (document.readyState !== "complete") await new Promise(resolve => window.addEventListener("load", resolve, { once: true }));
     const label = n => String(n).padStart(2, "0");

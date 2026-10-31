@@ -1,38 +1,29 @@
 {
-  "_help": "intervalSeconds = how long each quote stays on screen. Each quote is a list of lines.",
-  "intervalSeconds": 7,
+  "_help": "quoteIntervalSeconds = seconds each quote stays. heroIntervalSeconds = seconds each hero image stays. heroTransitionSeconds = length of the fade between hero images. Each quote is a list of lines.",
+  "quoteIntervalSeconds": 5,
+  "heroIntervalSeconds": 8,
+  "heroTransitionSeconds": 1.2,
   "quotes": [
- 
     [
       "Вечная дилемма владельца Porsche:",
       "Ездить и получать удовольствие",
       "или беречь пробег?"
     ],
-    
     [
-      "У владельцев Porsche не бывает кризиса среднего возраста.",
-      "Они называют это «апгрейдом 911»."
+      "Porsche owners don't have a midlife crisis.",
+      "They call it a 911 upgrade."
     ],
-    
     [
-      "Porsche не бывает слишком дорогим.",
-      "Ты просто недостаточно хорошо объяснил это своему супругу."
+      "A Porsche is never too expensive.",
+      "You just haven't explained it properly to your spouse."
     ],
-    
     [
-      "Владельцы Porsche не выпендриваются.",
-      "Так уж получается, что они паркуются там, где их все видят."
+      "Porsche owners don't show off.",
+      "They just happen to park where everyone can see."
     ],
-    
     [
-      "Второй Porsche тебе, в общем-то, не нужен.",
-      "Но, с другой стороны, первый тебе тоже не особо нужен."
-    ],
-    
-    [
-      "Владельцы Porsche верят в любовь с первого взгляда.",
-      "На каждом светофоре."
+      "You don't really need a second Porsche.",
+      "But then again, you don't really need a first one either."
     ]
-
   ]
 }
