@@ -530,10 +530,62 @@
     }, seconds * 1000);
   }
 
+  // Hero slideshow. Finds assets/Home/Hero-01, Hero-02, ... automatically (stops at the first missing number).
+  // How long each image stays is set in hero.json (intervalSeconds).
+  async function initHeroSlideshow() {
+    const wrap = $(".hero-image");
+    const first = wrap && $("img", wrap);
+    if (!first) return;
+    let seconds = 8;
+    try {
+      const response = await fetch("hero.json");
+      if (response.ok) {
+        const config = await response.json();
+        if (Number(config.intervalSeconds) > 0) seconds = Number(config.intervalSeconds);
+      }
+    } catch (_) { /* keep the default */ }
+    // Wait until the first image and the page are done, so looking for more images never slows the first paint.
+    if (document.readyState !== "complete") await new Promise(resolve => window.addEventListener("load", resolve, { once: true }));
+    const label = n => String(n).padStart(2, "0");
+    const stems = ["assets/Home/Hero-01"];
+    for (let n = 2; n <= 20; n++) {
+      const stem = `assets/Home/Hero-${label(n)}`;
+      if (!(await probeThumb(stem))) break;
+      stems.push(stem);
+    }
+    if (stems.length < 2) return;
+
+    const second = first.cloneNode();
+    second.removeAttribute("srcset");
+    second.removeAttribute("src");
+    second.alt = "";
+    second.setAttribute("aria-hidden", "true");
+    second.fetchPriority = "auto";
+    second.classList.add("is-hidden");
+    wrap.appendChild(second);
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) wrap.classList.add("no-fade");
+
+    let front = first, back = second, current = 0, busy = false;
+    setInterval(async () => {
+      if (busy || document.hidden) return;
+      busy = true;
+      const next = (current + 1) % stems.length;
+      back.sizes = "100vw";
+      back.srcset = srcsetOf(stems[next], [300, 600, 1200, 1920]);
+      back.src = imagePath(variant(stems[next], 1200));
+      await back.decode().catch(() => {}); // fade only once the next image is ready
+      back.classList.remove("is-hidden");
+      front.classList.add("is-hidden");
+      [front, back] = [back, front];
+      current = next;
+      busy = false;
+    }, seconds * 1000);
+  }
+
   async function boot() {
     const params = new URLSearchParams(window.location.search);
     const carId = params.get("car");
-    if (!carId) initQuotes();
+    if (!carId) { initQuotes(); initHeroSlideshow(); }
     const cars = await loadCars();
     if (carId) {
       document.title = `${cars.find(car => String(car.id) === carId)?.title || "Porsche 911"} — 911 Archive`;
