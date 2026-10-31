@@ -2,7 +2,7 @@
   "_help": "quoteIntervalSeconds = seconds each quote stays. heroIntervalSeconds = seconds each hero image stays. heroTransitionSeconds = length of the fade between hero images. Each quote is a list of lines.",
   "quoteIntervalSeconds": 7,
   "heroIntervalSeconds": 8,
-  "heroTransitionSeconds": 1.5,
+  "heroTransitionSeconds": 2.2,
   "quotes": [
     [
       "Вечная дилемма владельца Porsche:",
