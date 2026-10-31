@@ -1,4 +1,0 @@
-{
-  "_help": "intervalSeconds = how long each hero image stays on screen. Images are Hero-01, Hero-02, ... in assets/Home (found automatically).",
-  "intervalSeconds": 8
-}
